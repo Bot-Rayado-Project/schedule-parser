@@ -12,6 +12,7 @@ aiofile = "^3.7.4"
 bs4 = "^0.0.1"
 asyncio = "^3.4.3"
 openpyxl = "^3.0.9"
+asyncpg = "^0.25.0"
 
 [tool.poetry.dev-dependencies]
 

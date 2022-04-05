@@ -3,9 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Temp folders and files
-temp/
-tables/
+# Excel tables
+*.xlsx
 
 # C extensions
 *.so
