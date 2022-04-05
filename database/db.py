@@ -1,8 +1,24 @@
 import asyncpg
+from parser.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
-async def db_execute(string: str):
-    conn = await asyncpg.connect(user='postgres', password='admin', database='schedules', host='localhost')
-    await conn.fetch(f"INSERT INTO schedule_table VALUES('{string}', 'понедельник', 'Увы', True);")
+async def db_connect(user: str = 'postgres', password: str = 'admin', database: str = 'schedules', host: str = 'localhost'):
+    connection = await asyncpg.connect(user=user, password=password, database=database, host=host)
+    return connection
 
-    await conn.close()
+
+async def db_close(connection):
+    await connection.close()
+
+
+async def db_execute(connection, group: str, dayofweek: str, weektype: str, schedule: str):
+    even: bool = True if weektype == 'четная' else False
+    a: dict = await connection.fetch(f"SELECT schedule FROM schedule_table WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
+    if len(a) == 0:
+        logger.info(f'Успешно записано {dayofweek}, {group}, {weektype}')
+        await connection.fetchrow(f"INSERT INTO schedule_table VALUES('{group}','{dayofweek}','{schedule}',{even});")
+    else:
+        logger.info(f'Успешно перезаписано {dayofweek}, {group}, {weektype}')
+        await connection.fetchrow(f"UPDATE schedule_table SET schedule = '{schedule}' WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")

@@ -4,7 +4,7 @@ import aiofile
 from parser.schedule.sheethandler import get_schedules
 from parser.utils.constants import STREAMS, STREAMS_IDS
 from parser.utils.logger import get_logger
-from database.db import db_execute
+from database.db import db_connect, db_close
 from bs4 import BeautifulSoup
 
 logger = get_logger(__name__)
@@ -47,4 +47,6 @@ async def get_links() -> dict | None:
         logger.info(f'Все таблицы загружены ({counter}/{len(STREAMS_IDS)})')
     else:
         logger.error(f'({counter}/{len(STREAMS_IDS)}) таблиц загружено. Ошибка в {errors}')
-    await get_schedules()
+    connection = await db_connect()
+    await get_schedules(connection)
+    await db_close(connection)

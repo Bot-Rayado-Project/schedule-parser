@@ -5,6 +5,7 @@ from parser.utils.constants_blueprint import GROUP_MATCHING_SCHEDULE
 from parser.utils.constants import WEEK_COLUMN_GROUPS
 from parser.utils.logger import get_logger
 from parser.schedule.streams.KIIB.zrc import get_schedule_zrc
+from database.db import db_execute
 
 
 logger = get_logger(__name__)
@@ -41,7 +42,7 @@ async def write_schedule(day_input: str, group_input: str, week_type: str) -> st
         return await GROUP_MATCHING_SCHEDULE[group_input[0:3]](day_input, group_input, WEEK_COLUMN_GROUPS[group_input], week_type, schedule)
 
 
-async def get_schedules():
+async def get_schedules(connection):
     days = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота']
     groups = ['бвт2101', 'бвт2102', 'бвт2103', 'бвт2104', 'бвт2105', 'бвт2106',
               'бвт2107', 'бвт2108', 'бфи2101', 'бфи2102', 'бст2101', 'бст2102',
@@ -59,9 +60,12 @@ async def get_schedules():
         for group in groups:
             for weektype in weektypes:
                 try:
-                    await write_schedule(day, group, weektype)
-                    counter += 1
-                    logger.info(f'Успешно записано {day}, {group}, {weektype}')
+                    schedule = await write_schedule(day, group, weektype)
+                    if schedule != None:
+                        await db_execute(connection, group, day, weektype, schedule)
+                        counter += 1
+                    else:
+                        logger.error(f'Ошибка в {day}, {group}, {weektype} во время парсинга таблицы. Обновление отменено.')
                 except Exception as e:
                     errors += [f"{day}, {group}, {weektype}"]
                     logger.error(f'{e}: {traceback.format_exc()}')
