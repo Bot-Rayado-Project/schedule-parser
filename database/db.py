@@ -1,11 +1,12 @@
+import os
 import asyncpg
 from parser.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-async def db_connect(user: str = 'postgres', password: str = 'admin', database: str = 'schedules', host: str = 'localhost'):
-    connection = await asyncpg.connect(user=user, password=password, database=database, host=host)
+async def db_connect(user: str = 'postgres', password: str = 'admin', name: str = 'schedules', host: str = 'localhost'):
+    connection = await asyncpg.connect(user=user, password=password, database=name, host=host)
     return connection
 
 

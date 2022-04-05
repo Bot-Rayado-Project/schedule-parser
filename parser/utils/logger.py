@@ -4,8 +4,8 @@ log_format = '%(asctime)s.%(msecs)03d %(filename)s:%(lineno)d %(levelname)s %(me
 
 
 def get_file_handler() -> None:
-    file_handler = logging.FileHandler("logs.log")
-    file_handler.setLevel(logging.WARNING)
+    file_handler = logging.FileHandler("logs.log", encoding='UTF-8')
+    file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(logging.Formatter(log_format))
     return file_handler
 

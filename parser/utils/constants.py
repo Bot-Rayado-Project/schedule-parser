@@ -1,3 +1,18 @@
+import os
+
+
+class NoneException(Exception):
+    pass
+
+
+USER = os.environ.get('DBUSER')
+PASSWORD = os.environ.get('DBPASSWORD')
+NAME = os.environ.get('DBNAME')
+HOST = os.environ.get('DBHOST')
+
+if USER == None or PASSWORD == None or NAME == None or HOST == None:
+    raise NoneException
+
 STREAMS_IDS: dict = {'бвт': 'it_09.03.01', 'бст': 'it_09.03.02', 'бфи': 'it_02.03.02', 'бэи': 'it_09.03.03',
                      'биб': 'kiib_10.03.01', 'бмп': 'kiib_01.03.04', 'зрс': 'kiib_10.05.02', 'бап': 'kiib_15.03.04', 'бут': 'kiib_27.03.04',
                      'брт': 'rit_11.03.01', 'бик': 'rit_11.03.02',

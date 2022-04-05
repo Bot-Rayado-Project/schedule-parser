@@ -42,7 +42,7 @@ async def write_schedule(day_input: str, group_input: str, week_type: str) -> st
         return await GROUP_MATCHING_SCHEDULE[group_input[0:3]](day_input, group_input, WEEK_COLUMN_GROUPS[group_input], week_type, schedule)
 
 
-async def get_schedules(connection):
+async def get_schedules(connection) -> None:
     days = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота']
     groups = ['бвт2101', 'бвт2102', 'бвт2103', 'бвт2104', 'бвт2105', 'бвт2106',
               'бвт2107', 'бвт2108', 'бфи2101', 'бфи2102', 'бст2101', 'бст2102',

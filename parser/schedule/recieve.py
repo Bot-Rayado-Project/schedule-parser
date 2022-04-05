@@ -2,7 +2,7 @@ import aiohttp
 import aiofile
 
 from parser.schedule.sheethandler import get_schedules
-from parser.utils.constants import STREAMS, STREAMS_IDS
+from parser.utils.constants import STREAMS, STREAMS_IDS, USER, PASSWORD, HOST, NAME
 from parser.utils.logger import get_logger
 from database.db import db_connect, db_close
 from bs4 import BeautifulSoup
@@ -19,7 +19,7 @@ async def aiohttp_fetch(url: str, content: bool = False) -> str:
                 return await response.text()
 
 
-async def get_links() -> dict | None:
+async def get_links() -> None:
     '''Задает стартовые сигнатуры для каждого потока. Вызывается единожды - при запуске бота.'''
     raw_responce = await aiohttp_fetch('https://mtuci.ru/time-table/')
     soup = BeautifulSoup(raw_responce, 'html.parser')
@@ -47,6 +47,6 @@ async def get_links() -> dict | None:
         logger.info(f'Все таблицы загружены ({counter}/{len(STREAMS_IDS)})')
     else:
         logger.error(f'({counter}/{len(STREAMS_IDS)}) таблиц загружено. Ошибка в {errors}')
-    connection = await db_connect()
+    connection = await db_connect(USER, PASSWORD, NAME, HOST)
     await get_schedules(connection)
     await db_close(connection)
