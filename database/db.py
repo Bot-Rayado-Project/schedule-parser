@@ -1,4 +1,3 @@
-import os
 import asyncpg
 from parser.utils.logger import get_logger
 

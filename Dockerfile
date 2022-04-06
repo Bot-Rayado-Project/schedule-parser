@@ -4,9 +4,11 @@ WORKDIR /schedule-parser
 COPY poetry.lock pyproject.toml /schedule-parser/
 
 RUN pip install poetry
-RUN poetry install
-
-RUN poetry config virtualenvs.create false && poetry install
+RUN pip install aiohttp
+RUN pip install aiofile
+RUN pip install asyncio
+RUN pip install bs4
+RUN pip install asyncpg
 
 COPY . /schedule-parser
 
