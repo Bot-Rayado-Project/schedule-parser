@@ -10,6 +10,7 @@ RUN pip install asyncio
 RUN pip install bs4
 RUN pip install asyncpg
 RUN pip install openpyxl
+RUN pip install transliterate
 
 COPY . /schedule-parser
 
