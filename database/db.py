@@ -11,16 +11,17 @@ async def db_connect(user: str, password: str, name: str, host: str) -> asyncpg.
     '''Выполняет подключение к базе данных. В случае ошибки подключение выполняет еще одну попытку. Всего попыток 5.
     В случае последней неудачи возвращает None, иначе - asyncpg.Connection'''
     tries = 5
-    try:
-        connection = await asyncpg.connect(user=user, password=password, database=name, host=host)
-        logger.info(f'Successfully connected to database {name} to host {host} with user {user}')
-        return connection
-    except Exception as e:
-        tries -= 1
-        logger.error(f"Error connecting to database ({e}). Tries left: {tries}: {traceback.format_exc()}")
-        await asyncio.sleep(0.33)
-        if tries == 0:
-            return None
+    while True:
+        try:
+            connection = await asyncpg.connect(user=user, password=password, database=name, host=host)
+            logger.info(f'Successfully connected to database {name} to host {host} with user {user}')
+            return connection
+        except Exception as e:
+            tries -= 1
+            logger.error(f"Error connecting to database ({e}). Tries left: {tries}: {traceback.format_exc()}")
+            await asyncio.sleep(0.33)
+            if tries == 0:
+                return None
 
 
 async def db_close(connection: asyncpg.Connection) -> None:
@@ -40,5 +41,9 @@ async def db_write_schedule(connection: asyncpg.Connection, group: str, dayofwee
         logger.info(f'Успешно записано {dayofweek}, {group}, {weektype}')
         await connection.fetchrow(f"INSERT INTO schedule_table VALUES('{group}','{dayofweek}','{schedule}',{even});")
     else:
-        logger.info(f'Успешно перезаписано {dayofweek}, {group}, {weektype}')
-        await connection.fetchrow(f"UPDATE schedule_table SET schedule = '{schedule}' WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
+        if database_responce[0] == schedule:
+            logger.info(f'Изменений нет в {dayofweek}, {group}, {weektype}')
+            pass
+        else:
+            await connection.fetchrow(f"UPDATE schedule_table SET schedule = '{schedule}' WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
+            logger.info(f'Успешно перезаписано {dayofweek}, {group}, {weektype}')

@@ -29,7 +29,7 @@ async def get_links() -> None:
     soup = BeautifulSoup(raw_responce, 'html.parser')
     counter = 0
     errors = []
-    logger.info('Поиск ссылок')
+    logger.info('Looking for links...')
     for link in soup.find_all('a'):
         _link = link.get('href')
         try:
@@ -39,7 +39,7 @@ async def get_links() -> None:
         if _link.lower().startswith('/upload/') and "1-kurs" in _link.lower():
             for stream in STREAMS:
                 if STREAMS_IDS[stream] in _link.lower():
-                    logger.info('True')
+                    logger.info(_link)
                     try:
                         async with aiofile.async_open(f'tables/table_{stream}.xlsx', 'wb') as table:
                             await table.write(await aiohttp_fetch('https://mtuci.ru' + _link, True))
@@ -55,5 +55,8 @@ async def get_links() -> None:
     else:
         logger.error(f'({counter}/{len(STREAMS_IDS)}) таблиц загружено. Ошибка в {errors}')
     connection = await db_connect(USER, PASSWORD, NAME, HOST)
-    await get_schedules(connection)
-    await db_close(connection)
+    if connection == None:
+        return None
+    else:
+        await get_schedules(connection)
+        await db_close(connection)

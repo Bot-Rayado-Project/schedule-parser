@@ -2,6 +2,7 @@ import os
 import asyncio
 import traceback
 import typing
+import time
 import parser.schedule.recieve as r
 from parser.utils.logger import get_logger
 from parser.utils.constants import REPEAT_DELAY
@@ -21,13 +22,17 @@ class Parser:
 
     async def _start(self, delay: float):
         if self.first_start:
-            logger.info("First start detected")
-            await r.get_links()
             self.first_start = False
+            logger.info("First start detected")
+            res = await r.get_links()
+            if res == None:
+                raise Exception
         else:
             logger.info(f"Not first start. Sleeping for {delay}...")
             await asyncio.sleep(delay)
-            await r.get_links()
+            res = await r.get_links()
+            if res == None:
+                raise Exception
 
     async def start(self, ignore_errors: bool = True):
         if not ignore_errors:

@@ -69,8 +69,7 @@ async def get_schedules(connection: asyncpg.Connection) -> None:
                         logger.error(f'Ошибка в {day}, {group}, {weektype} во время парсинга таблицы. Обновление отменено.')
                         await asyncio.sleep(0.33)
                 except Exception as e:
-                    logger.error(f'Ошибка в {day}, {group}, {weektype}')
-                    logger.error(f'{e}: {traceback.format_exc()}')
+                    logger.error(f'Ошибка в {day}, {group}, {weektype}, {e}: {traceback.format_exc()}')
                     errors += [f"{day}, {group}, {weektype}"]
                     await asyncio.sleep(0.33)
                     pass
