@@ -63,10 +63,10 @@ async def get_schedules(connection) -> None:
                 try:
                     schedule = await write_schedule(day, group, weektype)
                     if schedule != None:
-                        logger.info(translit(connection, "ru", reversed=True))
+                        logger.info(connection)
                         logger.info(translit(group, "ru", reversed=True))
                         logger.info(translit(day, "ru", reversed=True))
-                        await db_execute(translit(connection, "ru", reversed=True),
+                        await db_execute(connection,
                                          translit(group, "ru", reversed=True),
                                          translit(day, "ru", reversed=True), weektype, schedule)
                         counter += 1
