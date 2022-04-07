@@ -9,9 +9,9 @@ from parser.schedule.streams.KIIB.but import get_schedule_but
 from parser.schedule.streams.RIT.bik import get_schedule_bik
 from parser.schedule.streams.RIT.brt import get_schedule_brt
 from parser.schedule.streams.SISS.bin import get_schedule_bin
-from parser.schedule.streams.TCEIMK.bbi import get_schedule_bbi
-from parser.schedule.streams.TCEIMK.bee import get_schedule_bee
-from parser.schedule.streams.TCEIMK.ber import get_schedule_ber
+from parser.schedule.streams.TSEIMK.bbi import get_schedule_bbi
+from parser.schedule.streams.TSEIMK.bee import get_schedule_bee
+from parser.schedule.streams.TSEIMK.ber import get_schedule_ber
 
 GROUP_MATCHING_SCHEDULE = {
     'бвт': get_schedule_bvt,

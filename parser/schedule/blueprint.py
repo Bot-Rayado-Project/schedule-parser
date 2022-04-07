@@ -1,4 +1,5 @@
 import traceback
+import asyncio
 from parser.utils.constants import TIME
 from parser.utils.logger import get_logger
 
@@ -22,6 +23,7 @@ async def get_schedule(start_cell: int, week_type: str, group: str, schedule, gr
             time_para += 1  # Счётчик пары плюс один
         except Exception as e:
             logger.error(f'Error in blueprint {e}: {traceback.format_exc()}')
+            await asyncio.sleep(0.33)
             return None
 
     return schedule_output

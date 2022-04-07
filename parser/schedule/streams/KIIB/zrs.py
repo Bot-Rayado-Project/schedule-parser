@@ -1,3 +1,4 @@
+import asyncio
 import traceback
 from parser.utils.constants import SUPPLEMENTS, TIME
 from parser.utils.logger import get_logger
@@ -5,7 +6,7 @@ from parser.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-async def get_schedule_zrc(day_type: str, group_text: str, week_type: str, schedule) -> str | None:
+async def get_schedule_zrs(day_type: str, group_text: str, week_type: str, schedule) -> str | None:
 
     week_column = 'G' if week_type == 'нечетная' else 'H'
     const = 1 if week_type == 'четная' else -1
@@ -26,6 +27,7 @@ async def get_schedule_zrc(day_type: str, group_text: str, week_type: str, sched
             else:
                 schedule_output += 'Пары нет\n' + '⸻⸻⸻⸻⸻\n'
     except Exception as e:
-        logger.error(f'Error in zrc {e}: {traceback.format_exc()}')
+        logger.error(f'Error in zrs {e}: {traceback.format_exc()}')
+        await asyncio.sleep(0.33)
         return None
     return schedule_output

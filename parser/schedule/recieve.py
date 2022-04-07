@@ -1,6 +1,8 @@
 import traceback
+import asyncio
 import aiohttp
 import aiofile
+import typing
 
 from parser.schedule.sheethandler import get_schedules
 from parser.utils.constants import STREAMS, STREAMS_IDS, USER, PASSWORD, HOST, NAME
@@ -11,7 +13,8 @@ from bs4 import BeautifulSoup
 logger = get_logger(__name__)
 
 
-async def aiohttp_fetch(url: str, content: bool = False) -> str:
+async def aiohttp_fetch(url: str, content: typing.Optional[bool] = False) -> bytes | str:
+    '''Отправляет GET запрос по URL'''
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if content:
@@ -21,7 +24,7 @@ async def aiohttp_fetch(url: str, content: bool = False) -> str:
 
 
 async def get_links() -> None:
-    '''Задает стартовые сигнатуры для каждого потока. Вызывается единожды - при запуске бота.'''
+    '''Парсит сайт на наличие ссылок, записывает файлы таблиц для каждого потока и вызывает '''
     raw_responce = await aiohttp_fetch('https://mtuci.ru/time-table/')
     soup = BeautifulSoup(raw_responce, 'html.parser')
     counter = 0
@@ -45,6 +48,7 @@ async def get_links() -> None:
                     except Exception as e:
                         logger.error(f"Error in downloading tables ({e}): {traceback.format_exc()}")
                         errors += [stream]
+                        await asyncio.sleep(0.33)
                         continue
     if counter == len(STREAMS_IDS):
         logger.info(f'Все таблицы загружены ({counter}/{len(STREAMS_IDS)})')

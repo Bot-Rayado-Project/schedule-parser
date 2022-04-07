@@ -1,19 +1,25 @@
 import traceback
+import asyncpg
+import asyncio
 import openpyxl
 
 from parser.utils.constants_blueprint import GROUP_MATCHING_SCHEDULE
-from parser.utils.constants import WEEK_COLUMN_GROUPS
+from parser.utils.constants import WEEK_COLUMN_GROUPS, DAYS, WEEKTYPES, GROUPS
 from parser.utils.logger import get_logger
-from parser.schedule.streams.KIIB.zrc import get_schedule_zrc
-from database.db import db_execute
+from parser.schedule.streams.KIIB.zrs import get_schedule_zrs
+from database.db import db_write_schedule
 from transliterate import translit
 
 
 logger = get_logger(__name__)
 
 
-async def get_sheet(temp_number: str, path: str) -> openpyxl.Workbook:
-    wb_obj = openpyxl.load_workbook(path)
+async def get_sheet(temp_number: str, path: str) -> openpyxl.Workbook | None:
+    try:
+        wb_obj = openpyxl.load_workbook(path)
+    except Exception as e:
+        logger.error(f'Ошибка при открытии таблицы {path} ({e}): {traceback.format_exc()}')
+        return None
     wb_obj.active = temp_number  # Задача листа таблицы
     sheet = wb_obj.active  # Выборка правильной таблицы
 
@@ -37,45 +43,36 @@ async def write_schedule(day_input: str, group_input: str, week_type: str) -> st
 
     schedule = await get_sheet(group_list, f'tables/table_{group_input[:3]}.xlsx')
 
-    if group_input[0:3] == 'зрс':
-        return await get_schedule_zrc(day_input, group_input, week_type, schedule)
+    if schedule != None:
+        if group_input[0:3] == 'зрс':
+            return await get_schedule_zrs(day_input, group_input, week_type, schedule)
+        else:
+            return await GROUP_MATCHING_SCHEDULE[group_input[0:3]](day_input, group_input, WEEK_COLUMN_GROUPS[group_input], week_type, schedule)
     else:
-        return await GROUP_MATCHING_SCHEDULE[group_input[0:3]](day_input, group_input, WEEK_COLUMN_GROUPS[group_input], week_type, schedule)
+        return None
 
 
-async def get_schedules(connection) -> None:
-    days = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота']
-    groups = ['бвт2101', 'бвт2102', 'бвт2103', 'бвт2104', 'бвт2105', 'бвт2106',
-              'бвт2107', 'бвт2108', 'бфи2101', 'бфи2102', 'бст2101', 'бст2102',
-              'бст2103', 'бст2104', 'бст2105', 'бст2106', 'бэи2101', 'бэи2102',
-              'бэи2103', 'биб2101', 'биб2102', 'биб2103', 'биб2104', 'бмп2101',
-              'зрс2101', 'зрс2102', 'бап2101', 'бут2101', 'брт2101', 'брт2102',
-              'бик2101', 'бик2102', 'бик2103', 'бик2104', 'бик2105', 'бик2106',
-              'бик2107', 'бик2108', 'бик2109', 'бээ2101', 'бби2101', 'бэр2101',
-              'бин2101', 'бин2102', 'бин2103', 'бин2104', 'бин2105', 'бин2106',
-              'бин2107', 'бин2108', 'бин2109', 'бин2110']
-    weektypes = ['четная', 'нечетная']
+async def get_schedules(connection: asyncpg.Connection) -> None:
     counter = 0
     errors = []
-    for day in days:
-        for group in groups:
-            for weektype in weektypes:
+    for day in DAYS:
+        for group in GROUPS:
+            for weektype in WEEKTYPES:
                 try:
                     schedule = await write_schedule(day, group, weektype)
                     if schedule != None:
-                        logger.info(connection)
-                        logger.info(translit(group, "ru", reversed=True))
-                        logger.info(str(translit(day, "ru", reversed=True)).replace("'", ""))
-                        await db_execute(connection,
-                                         translit(group, "ru", reversed=True),
-                                         str(translit(day, "ru", reversed=True)).replace("'", ""), weektype, schedule)
+                        await db_write_schedule(connection,
+                                                translit(group, "ru", reversed=True),
+                                                str(translit(day, "ru", reversed=True)).replace("'", ""), weektype, schedule)
                         counter += 1
                     else:
                         logger.error(f'Ошибка в {day}, {group}, {weektype} во время парсинга таблицы. Обновление отменено.')
+                        await asyncio.sleep(0.33)
                 except Exception as e:
                     logger.error(f'Ошибка в {day}, {group}, {weektype}')
-                    errors += [f"{day}, {group}, {weektype}"]
                     logger.error(f'{e}: {traceback.format_exc()}')
+                    errors += [f"{day}, {group}, {weektype}"]
+                    await asyncio.sleep(0.33)
                     pass
     if counter == 624:
         logger.info(f'Все таблицы загружены ({counter}/624)')
