@@ -1,3 +1,4 @@
+import os
 import asyncio
 import traceback
 import typing
@@ -10,6 +11,8 @@ logger = get_logger(__name__)
 class Parser:
     async def run(self, ignore_errors: bool = True):
         logger.info("Starting bot...")
+        if not os.path.isdir("tables"):
+            os.mkdir("tables")
         asyncio.get_running_loop().create_task(self.start(ignore_errors))
 
     async def _start(self, delay: float):

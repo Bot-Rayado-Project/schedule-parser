@@ -34,10 +34,7 @@ async def get_links() -> None:
         except AttributeError:
             continue
         if _link.lower().startswith('/upload/') and "1-kurs" in _link.lower():
-            logger.info(_link)
             for stream in STREAMS:
-                logger.info(stream)
-                logger.info(STREAMS)
                 if STREAMS_IDS[stream] in _link.lower():
                     logger.info('True')
                     try:
@@ -46,7 +43,7 @@ async def get_links() -> None:
                             logger.info(f'Файл tables/table_{stream}.xlsx успешно записан')
                             counter += 1
                     except Exception as e:
-                        logger.error(f"Error in event loop ({e}): {traceback.format_exc()}")
+                        logger.error(f"Error in downloading tables ({e}): {traceback.format_exc()}")
                         errors += [stream]
                         continue
     if counter == len(STREAMS_IDS):
@@ -54,6 +51,5 @@ async def get_links() -> None:
     else:
         logger.error(f'({counter}/{len(STREAMS_IDS)}) таблиц загружено. Ошибка в {errors}')
     connection = await db_connect(USER, PASSWORD, NAME, HOST)
-    exit()
     await get_schedules(connection)
     await db_close(connection)
