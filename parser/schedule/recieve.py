@@ -28,6 +28,7 @@ async def get_links() -> None:
     logger.info('Поиск ссылок')
     for link in soup.find_all('a'):
         _link = link.get('href')
+        logger.info(_link)
         try:
             _link.lower()
         except AttributeError:
@@ -43,6 +44,7 @@ async def get_links() -> None:
                     except Exception:
                         errors += [stream]
                         continue
+    exit()
     if counter == len(STREAMS_IDS):
         logger.info(f'Все таблицы загружены ({counter}/{len(STREAMS_IDS)})')
     else:
