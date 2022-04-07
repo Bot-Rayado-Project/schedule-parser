@@ -23,7 +23,7 @@ async def aiohttp_fetch(url: str, content: typing.Optional[bool] = False) -> byt
                 return await response.text()
 
 
-async def get_links() -> None:
+async def get_links() -> None | int:
     '''Парсит сайт на наличие ссылок, записывает файлы таблиц для каждого потока и вызывает '''
     raw_responce = await aiohttp_fetch('https://mtuci.ru/time-table/')
     soup = BeautifulSoup(raw_responce, 'html.parser')
@@ -60,3 +60,4 @@ async def get_links() -> None:
     else:
         await get_schedules(connection)
         await db_close(connection)
+        return 0

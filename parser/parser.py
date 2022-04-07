@@ -27,21 +27,25 @@ class Parser:
             res = await r.get_links()
             if res == None:
                 raise Exception
+            else:
+                pass
         else:
             logger.info(f"Not first start. Sleeping for {delay}...")
             await asyncio.sleep(delay)
             res = await r.get_links()
             if res == None:
                 raise Exception
+            else:
+                pass
 
     async def start(self, ignore_errors: bool = True):
         if not ignore_errors:
             while True:
-                await self._start(REPEAT_DELAY)
+                await self._start(int(REPEAT_DELAY))
         else:
             while True:
                 try:
-                    await self._start(REPEAT_DELAY)
+                    await self._start(int(REPEAT_DELAY))
                 except Exception as e:
                     logger.error(f"Error in event loop ({e}): {traceback.format_exc()}")
                     await asyncio.sleep(0.33)

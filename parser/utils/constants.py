@@ -9,7 +9,7 @@ USER = os.environ.get('DBUSER')
 NAME = os.environ.get('DBNAME')
 HOST = os.environ.get('DBHOST')
 PASSWORD = os.environ.get('DBPASSWORD')
-REPEAT_DELAY = os.environ.get('REPEAT_DELAY') or 28800
+REPEAT_DELAY = int(os.environ.get('REPEAT_DELAY')) or 28800
 DEBUG = os.environ.get('DEBUG') or False
 
 if USER == None or PASSWORD == None or NAME == None or HOST == None:

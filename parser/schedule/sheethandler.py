@@ -54,7 +54,7 @@ async def write_schedule(day_input: str, group_input: str, week_type: str) -> st
 
 async def get_schedules(connection: asyncpg.Connection) -> None:
     counter = 0
-    errors = []
+    errors = {}
     for day in DAYS:
         for group in GROUPS:
             for weektype in WEEKTYPES:
@@ -69,8 +69,7 @@ async def get_schedules(connection: asyncpg.Connection) -> None:
                         logger.error(f'Ошибка в {day}, {group}, {weektype} во время парсинга таблицы. Обновление отменено.')
                         await asyncio.sleep(0.33)
                 except Exception as e:
-                    logger.error(f'Ошибка в {day}, {group}, {weektype}, {e}: {traceback.format_exc()}')
-                    errors += [f"{day}, {group}, {weektype}"]
+                    errors[f"{day}, {group}, {weektype}"] = traceback.format_exc()
                     await asyncio.sleep(0.33)
                     pass
     if counter == 624:
