@@ -22,11 +22,11 @@ class Parser:
     async def start(self, ignore_errors: bool = True):
         if not ignore_errors:
             while True:
-                await self._start(600)
+                await self._start(3600)
         else:
             while True:
                 try:
-                    await self._start(600)
+                    await self._start(3600)
                 except Exception as e:
                     logger.error(f"Error in event loop ({e}): {traceback.format_exc()}")
                     await asyncio.sleep(0.33)

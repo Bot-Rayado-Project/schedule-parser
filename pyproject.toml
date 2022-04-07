@@ -13,6 +13,7 @@ bs4 = "^0.0.1"
 asyncio = "^3.4.3"
 openpyxl = "^3.0.9"
 asyncpg = "^0.25.0"
+transliterate = "^1.10.2"
 
 [tool.poetry.dev-dependencies]
 

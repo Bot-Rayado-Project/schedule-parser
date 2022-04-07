@@ -6,6 +6,7 @@ from parser.utils.constants import WEEK_COLUMN_GROUPS
 from parser.utils.logger import get_logger
 from parser.schedule.streams.KIIB.zrc import get_schedule_zrc
 from database.db import db_execute
+from transliterate import translit
 
 
 logger = get_logger(__name__)
@@ -62,14 +63,19 @@ async def get_schedules(connection) -> None:
                 try:
                     schedule = await write_schedule(day, group, weektype)
                     if schedule != None:
-                        await db_execute(connection, group, day, weektype, schedule)
+                        logger.info(translit(connection, "ru", reversed=True))
+                        logger.info(translit(group, "ru", reversed=True))
+                        logger.info(translit(day, "ru", reversed=True))
+                        await db_execute(translit(connection, "ru", reversed=True),
+                                         translit(group, "ru", reversed=True),
+                                         translit(day, "ru", reversed=True), weektype, schedule)
                         counter += 1
                     else:
                         logger.error(f'Ошибка в {day}, {group}, {weektype} во время парсинга таблицы. Обновление отменено.')
                 except Exception as e:
+                    logger.error(f'Ошибка в {day}, {group}, {weektype}')
                     errors += [f"{day}, {group}, {weektype}"]
                     logger.error(f'{e}: {traceback.format_exc()}')
-                    logger.error(f'Ошибка в {day}, {group}, {weektype}')
                     pass
     if counter == 624:
         logger.info(f'Все таблицы загружены ({counter}/624)')
