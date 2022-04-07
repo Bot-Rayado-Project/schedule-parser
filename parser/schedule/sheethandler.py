@@ -65,10 +65,10 @@ async def get_schedules(connection) -> None:
                     if schedule != None:
                         logger.info(connection)
                         logger.info(translit(group, "ru", reversed=True))
-                        logger.info(translit(day, "ru", reversed=True))
+                        logger.info(str(translit(day, "ru", reversed=True)).replace("'", ""))
                         await db_execute(connection,
                                          translit(group, "ru", reversed=True),
-                                         translit(day, "ru", reversed=True), weektype, schedule)
+                                         str(translit(day, "ru", reversed=True)).replace("'", ""), weektype, schedule)
                         counter += 1
                     else:
                         logger.error(f'Ошибка в {day}, {group}, {weektype} во время парсинга таблицы. Обновление отменено.')
