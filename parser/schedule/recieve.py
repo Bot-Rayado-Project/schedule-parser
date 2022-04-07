@@ -1,3 +1,4 @@
+import traceback
 import aiohttp
 import aiofile
 
@@ -28,27 +29,31 @@ async def get_links() -> None:
     logger.info('Поиск ссылок')
     for link in soup.find_all('a'):
         _link = link.get('href')
-        logger.info(_link)
         try:
             _link.lower()
         except AttributeError:
             continue
         if _link.lower().startswith('/upload/') and "1-kurs" in _link.lower():
+            logger.info(_link)
             for stream in STREAMS:
+                logger.info(stream)
+                logger.info(STREAMS)
                 if STREAMS_IDS[stream] in _link.lower():
+                    logger.info('True')
                     try:
                         async with aiofile.async_open(f'tables/table_{stream}.xlsx', 'wb') as table:
                             await table.write(await aiohttp_fetch('https://mtuci.ru' + _link, True))
                             logger.info(f'Файл tables/table_{stream}.xlsx успешно записан')
                             counter += 1
-                    except Exception:
+                    except Exception as e:
+                        logger.error(f"Error in event loop ({e}): {traceback.format_exc()}")
                         errors += [stream]
                         continue
-    exit()
     if counter == len(STREAMS_IDS):
         logger.info(f'Все таблицы загружены ({counter}/{len(STREAMS_IDS)})')
     else:
         logger.error(f'({counter}/{len(STREAMS_IDS)}) таблиц загружено. Ошибка в {errors}')
     connection = await db_connect(USER, PASSWORD, NAME, HOST)
+    exit()
     await get_schedules(connection)
     await db_close(connection)
