@@ -12,9 +12,7 @@ async def get_schedule_zrc(day_type: str, group_text: str, week_type: str, sched
 
     days = {'понедельник': 14, 'вторник': 20, 'среда': 26, 'четверг': 32, 'пятница': 38, 'суббота': 44}
 
-    schedule_output = '⸻⸻⸻⸻⸻\n' + 'Группа: ' + group_text.upper() + '\n' \
-        + 'День недели: ' + day_type.capitalize() + '\n' + 'Неделя: ' + week_type.capitalize() + '\n' \
-        + '⸻⸻⸻⸻⸻\n'  # Добавляем заголовок вывода, группа и тд.
+    schedule_output = ''
     try:
         for i in range(days[day_type], days[day_type] + 5):
 

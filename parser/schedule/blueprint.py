@@ -8,9 +8,7 @@ logger = get_logger(__name__)
 async def get_schedule(start_cell: int, week_type: str, group: str, schedule, group_column: str, x: int, day_type: str) -> str:
     week_days = {'понедельник': 0, 'вторник': 1, 'среда': 2, 'четверг': 3, 'пятница': 4, 'суббота': 5, }
     day = week_days[day_type] * x + start_cell
-    schedule_output = '⸻⸻⸻⸻⸻\n' + 'Группа: ' + group.upper() + '\n' \
-        + 'День недели: ' + day_type.capitalize() + '\n' + 'Неделя: ' + week_type.capitalize() + '\n' \
-        + '⸻⸻⸻⸻⸻\n'  # Добавляем заголовок вывода, группа и тд.
+    schedule_output = ''
     time_para = 1  # Номер пары для времени
     for para_cell in range(day, day + 10, 2):
         try:
