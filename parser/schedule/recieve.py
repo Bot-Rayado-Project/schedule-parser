@@ -13,10 +13,6 @@ from bs4 import BeautifulSoup
 logger = get_logger(__name__)
 
 
-class NotDownloadedException(Exception):
-    pass
-
-
 async def aiohttp_fetch(url: str, content: typing.Optional[bool] = False) -> bytes | str:
     '''Отправляет GET запрос по URL'''
     async with aiohttp.ClientSession() as session:
