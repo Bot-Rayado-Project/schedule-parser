@@ -11,16 +11,16 @@ logger = get_logger(__name__)
 
 
 class Parser:
-    def __init__(self):
+    def __init__(self) -> None:
         self.first_start = True
 
-    async def run(self, ignore_errors: bool = True):
+    async def run(self, ignore_errors: bool = True) -> None:
         logger.info("Starting bot...")
         if not os.path.isdir("tables"):
             os.mkdir("tables")
         asyncio.get_running_loop().create_task(self.start(ignore_errors))
 
-    async def _start(self, delay: float):
+    async def _start(self, delay: float) -> None:
         if self.first_start:
             self.first_start = False
             logger.info("First start detected")
@@ -30,7 +30,7 @@ class Parser:
             else:
                 pass
         else:
-            logger.info(f"Not first start. Sleeping for {delay}...")
+            logger.info(f"Another start detected. Sleeping for {delay}...")
             await asyncio.sleep(delay)
             res = await r.get_links()
             if res == None:
@@ -38,7 +38,7 @@ class Parser:
             else:
                 pass
 
-    async def start(self, ignore_errors: bool = True):
+    async def start(self, ignore_errors: bool = True) -> None:
         if not ignore_errors:
             while True:
                 await self._start(int(REPEAT_DELAY))
@@ -51,7 +51,7 @@ class Parser:
                     await asyncio.sleep(0.33)
                     continue
 
-    def run_forever(self, ignore_errors: bool = True, loop: typing.Optional[asyncio.AbstractEventLoop] = None):
+    def run_forever(self, ignore_errors: bool = True, loop: typing.Optional[asyncio.AbstractEventLoop] = None) -> None:
         loop = loop or asyncio.get_event_loop()
         loop.create_task(self.run(ignore_errors))
         loop.run_forever()

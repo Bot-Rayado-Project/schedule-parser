@@ -55,6 +55,7 @@ async def write_schedule(day_input: str, group_input: str, week_type: str) -> st
 async def get_schedules(connection: asyncpg.Connection) -> None:
     counter = 0
     errors = {}
+    logger.info('Writing schedules...')
     for day in DAYS:
         for group in GROUPS:
             for weektype in WEEKTYPES:

@@ -1,6 +1,6 @@
 import logging
 import logging.handlers
-from parser.utils.constants import USER, NAME, HOST, PASSWORD, REPEAT_DELAY, DEBUG
+from parser.utils.constants import DBUSER, DBNAME, DBHOST, DBPASSWORD, REPEAT_DELAY, DEBUG, EADRESS, EPASSWORD
 
 log_format = '%(asctime)s.%(msecs)03d %(filename)s:%(lineno)d %(levelname)s %(message)s'
 
@@ -14,10 +14,10 @@ def get_file_handler() -> None:
 
 def get_smtp_handler() -> None:
     smtp_handler = logging.handlers.SMTPHandler(mailhost=("smtp.gmail.com", 587),
-                                                fromaddr="rayadodevelopment@gmail.com",
-                                                toaddrs="rayadodevelopment@gmail.com",
+                                                fromaddr=EADRESS,
+                                                toaddrs=EADRESS,
                                                 subject=u"Schedule-parser error!",
-                                                credentials=("rayadodevelopment@gmail.com", "txywpptzayonxlba"),
+                                                credentials=(EADRESS, EPASSWORD),
                                                 secure=())
     smtp_handler.setLevel(logging.ERROR)
     smtp_handler.setFormatter(logging.Formatter(log_format))
@@ -42,9 +42,9 @@ def get_logger(name: str) -> None:
 
 
 logger = get_logger(__name__)
-logger.info(f'{USER}')
-logger.info(f'{NAME}')
-logger.info(f'{HOST}')
-logger.info(f'{PASSWORD}')
+logger.info(f'{DBUSER}')
+logger.info(f'{DBNAME}')
+logger.info(f'{DBHOST}')
+logger.info(f'{DBPASSWORD}')
 logger.info(f'{REPEAT_DELAY}')
 logger.info(f'{DEBUG}')
