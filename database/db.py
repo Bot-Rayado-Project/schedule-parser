@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Tuple, Union
 from parser.utils.logger import get_logger
 
 import traceback
@@ -8,7 +8,7 @@ import asyncpg
 logger = get_logger(__name__)
 
 
-async def db_connect(user: Optional[str], password: Optional[str], name: Optional[str], host: Optional[str]) -> asyncpg.Connection | None:
+async def db_connect(user: str, password: str, name: str, host: str) -> asyncpg.Connection | None:
     '''Выполняет подключение к базе данных. В случае ошибки подключение выполняет еще одну попытку. Всего попыток 5.
     В случае последней неудачи возвращает None, иначе - asyncpg.Connection'''
     tries = 5
