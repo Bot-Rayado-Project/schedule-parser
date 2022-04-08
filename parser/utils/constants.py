@@ -11,10 +11,10 @@ DBHOST = os.environ.get('DBHOST')
 DBPASSWORD = os.environ.get('DBPASSWORD')
 EADRESS = os.environ.get('EADRESS')
 EPASSWORD = os.environ.get('EPASSWORD')
-REPEAT_DELAY = int(os.environ.get('REPEAT_DELAY')) or 28800
+REPEAT_DELAY = os.environ.get('REPEAT_DELAY') or 28800
 DEBUG = os.environ.get('DEBUG') or False
 
-if DBUSER == None or DBPASSWORD == None or DBNAME == None or DBHOST == None:
+if DBUSER is None or DBPASSWORD is None or DBNAME is None or DBHOST is None:
     raise NoneException
 
 STREAMS_IDS: dict = {'бвт': 'it_09.03.01', 'бст': 'it_09.03.02', 'бфи': 'it_02.03.02', 'бэи': 'it_09.03.03',

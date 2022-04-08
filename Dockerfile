@@ -20,7 +20,7 @@ COPY poetry.lock pyproject.toml /schedule-parser/
 
 # Project initialization:
 RUN poetry config virtualenvs.create false \
-  && poetry install $(test "$ENVIRON" == production && echo "--no-dev") --no-interaction --no-ansi
+  && poetry install --no-dev --no-interaction --no-ansi
 
 # Creating folders, and files for a project:
 COPY . /schedule-parser

@@ -17,7 +17,7 @@ async def get_schedule_zrs(day_type: str, group_text: str, week_type: str, sched
     try:
         for i in range(days[day_type], days[day_type] + 5):
 
-            if schedule[week_column + str(i)].value != None:
+            if schedule[week_column + str(i)].value is not None:
                 schedule_output += str(TIME[i - days[day_type] + 1]) + '  ' \
                     + str(schedule[week_column + str(i)].value) + '\n\n' \
                     + 'Преподаватель: ' + str(schedule[chr(ord(week_column) + 1 * const) + str(i)].value) + '\n'\

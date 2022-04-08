@@ -16,6 +16,8 @@ asyncpg = "^0.25.0"
 transliterate = "^1.10.2"
 
 [tool.poetry.dev-dependencies]
+flake8 = "^4.0.1"
+mypy = "^0.942"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

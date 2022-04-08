@@ -65,9 +65,10 @@ async def get_links() -> None | int:
             await asyncio.sleep(0.33)
             continue
         connection = await db_connect(DBUSER, DBPASSWORD, DBNAME, DBHOST)
-        if connection == None:
+        if connection is None:
             return None
         else:
             await get_schedules(connection)
             await db_close(connection)
             return 0
+    return None

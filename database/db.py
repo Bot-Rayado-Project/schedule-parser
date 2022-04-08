@@ -1,3 +1,4 @@
+from typing import Any, Optional, Tuple, Union
 from parser.utils.logger import get_logger
 
 import traceback
@@ -7,7 +8,7 @@ import asyncpg
 logger = get_logger(__name__)
 
 
-async def db_connect(user: str, password: str, name: str, host: str) -> asyncpg.Connection | None:
+async def db_connect(user: Optional[str], password: Optional[str], name: Optional[str], host: Optional[str]) -> asyncpg.Connection | None:
     '''Выполняет подключение к базе данных. В случае ошибки подключение выполняет еще одну попытку. Всего попыток 5.
     В случае последней неудачи возвращает None, иначе - asyncpg.Connection'''
     tries = 5
@@ -33,7 +34,7 @@ async def db_close(connection: asyncpg.Connection) -> None:
         await asyncio.sleep(0.33)
 
 
-async def db_write_schedule(connection: asyncpg.Connection, group: str, dayofweek: str, weektype: str, schedule: str) -> None:
+async def db_write_schedule(connection: asyncpg.Connection, group: str, dayofweek: str, weektype: str, schedule: Union[str, Tuple[Any, ...], bool]) -> None:
     '''Записывает расписание для нужной группы, дня недели, четной или нечетной недели'''
     even: bool = True if weektype == 'четная' else False
     database_responce: list = await connection.fetch(f"SELECT schedule FROM schedule_table WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
@@ -45,7 +46,7 @@ async def db_write_schedule(connection: asyncpg.Connection, group: str, dayofwee
         else:
             await connection.fetchrow(f"UPDATE schedule_table SET schedule = '{schedule}' WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
             logger.info(f'Успешно перезаписано {dayofweek}, {group}, {weektype}')
-    except:
+    except Exception:
         logger.info(f'Успешно записано {dayofweek}, {group}, {weektype}')
         await connection.fetchrow(f"INSERT INTO schedule_table VALUES('{group}','{dayofweek}','{schedule}',{even});")
         pass
