@@ -5,6 +5,7 @@ import parser.utils.constants as c
 import uvicorn
 import typing
 import asyncio
+import os
 
 
 app = FastAPI()
@@ -63,4 +64,6 @@ async def status() -> dict:
     return {'result': _tasks} if len(_tasks) != 0 else {'result': 'No parser running'}
 
 if __name__ == "__main__":
+    if not os.path.isdir("tables"):
+        os.mkdir("tables")
     uvicorn.run(app, host="0.0.0.0", port=8001)
