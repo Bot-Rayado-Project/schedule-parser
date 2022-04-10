@@ -46,7 +46,7 @@ async def db_write_schedule(connection: asyncpg.Connection, group: str, dayofwee
             pass
         else:
             _responce = _database_responce['schedule']
-            logger.info(f'Сходство строк: {jellyfish.jaro_similarity(schedule, _responce)}')
+            logger.info(f'Сходство строк: {jellyfish.jaro_similarity(schedule, str(_responce))}')
             await connection.fetchrow(f"UPDATE schedule_table SET schedule = '{schedule}' WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
             logger.info(f'Успешно перезаписано {dayofweek}, {group}, {weektype}')
     except Exception:
