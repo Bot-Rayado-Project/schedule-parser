@@ -2,7 +2,6 @@ from parser.parser import Parser
 from fastapi import FastAPI
 from datetime import datetime
 import parser.utils.constants as c
-import uvicorn
 import typing
 import asyncio
 
