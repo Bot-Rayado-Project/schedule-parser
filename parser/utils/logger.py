@@ -1,6 +1,6 @@
 import logging
 import logging.handlers
-from parser.utils.constants import DBUSER, DBNAME, DBHOST, DBPASSWORD, REPEAT_DELAY, DEBUG, EADRESS, EPASSWORD
+from parser.utils.constants import DEBUG, EADRESS, EPASSWORD
 
 log_format = '%(asctime)s.%(msecs)03d %(filename)s:%(lineno)d %(levelname)s %(message)s'
 
@@ -39,12 +39,3 @@ def get_logger(name: str) -> logging.Logger:
     logger.addHandler(get_file_handler())
     logger.addHandler(get_stream_handler())
     return logger
-
-
-logger = get_logger(__name__)
-logger.info(f'{DBUSER}')
-logger.info(f'{DBNAME}')
-logger.info(f'{DBHOST}')
-logger.info(f'{DBPASSWORD}')
-logger.info(f'{REPEAT_DELAY}')
-logger.info(f'{DEBUG}')
