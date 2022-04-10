@@ -62,10 +62,12 @@ async def get_schedules(connection: asyncpg.Connection) -> None:
                 try:
                     schedule = await write_schedule(day, group, weektype)
                     if schedule is not None:
+                        counter += 1
                         await db_write_schedule(connection,
                                                 translit(group, "ru", reversed=True),
-                                                str(translit(day, "ru", reversed=True)).replace("'", ""), weektype, schedule)
-                        counter += 1
+                                                str(translit(day, "ru", reversed=True)).replace("'", ""),
+                                                weektype,
+                                                schedule)
                     else:
                         logger.error(f'Ошибка в {day}, {group}, {weektype} во время парсинга таблицы. Обновление отменено.')
                         await asyncio.sleep(0.33)

@@ -26,4 +26,4 @@ RUN poetry config virtualenvs.create false \
 COPY . /schedule-parser
 
 # Setting start comand to python server.py:
-CMD ["python", "server.py"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "5000"]

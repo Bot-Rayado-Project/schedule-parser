@@ -1,6 +1,7 @@
 from typing import Any, Tuple, Union
 from parser.utils.logger import get_logger
 
+import jellyfish
 import traceback
 import asyncio
 import asyncpg
@@ -44,6 +45,8 @@ async def db_write_schedule(connection: asyncpg.Connection, group: str, dayofwee
             # logger.info(f'Изменений нет в {dayofweek}, {group}, {weektype}')
             pass
         else:
+            _responce = _database_responce['schedule']
+            logger.info(f'Сходство строк: {jellyfish.jaro_similarity(schedule, str(_responce))}')
             await connection.fetchrow(f"UPDATE schedule_table SET schedule = '{schedule}' WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
             logger.info(f'Успешно перезаписано {dayofweek}, {group}, {weektype}')
     except Exception:
