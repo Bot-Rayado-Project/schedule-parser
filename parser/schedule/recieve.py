@@ -3,9 +3,10 @@ import asyncio
 import aiohttp
 import aiofile
 import typing
+import parser.utils.constants as c
 
 from parser.schedule.sheethandler import get_schedules
-from parser.utils.constants import STREAMS, STREAMS_IDS, DBUSER, DBPASSWORD, DBHOST, DBNAME
+from parser.utils.constants import STREAMS, STREAMS_IDS, DBUSER, DBPASSWORD, DBHOST, DBNAME, DEBUG
 from parser.utils.logger import get_logger
 from database.db import db_connect, db_close
 from bs4 import BeautifulSoup
@@ -42,11 +43,9 @@ async def get_links() -> None | int:
             if _link.lower().startswith('/upload/') and "1-kurs" in _link.lower():
                 for stream in STREAMS:
                     if STREAMS_IDS[stream] in _link.lower():
-                        logger.info(_link)
                         try:
                             async with aiofile.async_open(f'tables/table_{stream}.xlsx', 'wb') as table:
                                 await table.write(await aiohttp_fetch('https://mtuci.ru' + _link, True))
-                                logger.info(f'Файл tables/table_{stream}.xlsx успешно записан')
                                 counter += 1
                         except Exception as e:
                             logger.error(f"Error in downloading tables ({e}): {traceback.format_exc()}")
@@ -60,11 +59,29 @@ async def get_links() -> None | int:
             tries -= 1
             await asyncio.sleep(0.33)
             continue
-        connection = await db_connect(str(DBUSER), str(DBPASSWORD), str(DBNAME), str(DBHOST))
-        if connection is None:
-            return None
+        if not DEBUG:
+            c.something_is_running = True
+            connection = await db_connect(str(DBUSER), str(DBPASSWORD), str(DBNAME), str(DBHOST))
+            if connection is None:
+                c.something_is_running = False
+                return None
+            else:
+                c.something_is_running = True
+                await get_schedules(connection)
+                await db_close(connection)
+                c.something_is_running = False
+                return 0
         else:
-            await get_schedules(connection)
-            await db_close(connection)
+            c.something_is_running = True
+            logger.info('Doing parsing stuff...')
+
+            async def test():
+                for i in range(10):
+                    print(i)
+                    await asyncio.sleep(1)
+
+            await test()
+            c.something_is_running = False
             return 0
+    c.something_is_running = False
     return None
