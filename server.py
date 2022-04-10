@@ -61,6 +61,3 @@ async def status() -> dict:
         if task.get_name() == 'run_forever_task' or task.get_name() == 'run_once_task':
             _tasks.append(task.get_name())
     return {'result': _tasks} if len(_tasks) != 0 else {'result': 'No parser running'}
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8001)
