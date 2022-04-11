@@ -10,6 +10,8 @@ app = FastAPI()
 
 parser = Parser()
 
+parser.run_forever()
+
 
 @app.get('/run/')
 async def run(once: typing.Optional[bool] = False) -> dict:
