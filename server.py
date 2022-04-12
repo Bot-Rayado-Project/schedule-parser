@@ -62,3 +62,15 @@ async def status() -> dict:
         if task.get_name() == 'run_forever_task' or task.get_name() == 'run_once_task':
             _tasks.append(task.get_name())
     return {'result': _tasks} if len(_tasks) != 0 else {'result': 'No parser running'}
+
+
+@app.get('/delay/')
+async def delay(set: typing.Optional[bool], value: typing.Optional[int]) -> dict:
+    if set and value is not None:
+        try:
+            int(value)
+        except Exception:
+            return {'error': 'Error converting given value to int'}
+        c.REPEAT_DELAY = int(value)
+        return {'result': f'Repeat delay changed to {c.REPEAT_DELAY}'}
+    return {'result': c.REPEAT_DELAY}
