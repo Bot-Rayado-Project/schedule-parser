@@ -11,7 +11,7 @@ DBHOST = os.environ.get('DBHOST')
 DBPASSWORD = os.environ.get('DBPASSWORD')
 EADRESS = os.environ.get('EADRESS')
 EPASSWORD = os.environ.get('EPASSWORD')
-REPEAT_DELAY = os.environ.get('REPEAT_DELAY') or 28800
+REPEAT_DELAY = os.environ.get('REPEAT_DELAY') or 86400
 DEBUG = os.environ.get('DEBUG') or False
 
 something_is_running: bool = False
