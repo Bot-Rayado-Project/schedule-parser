@@ -13,6 +13,11 @@ parser = Parser()
 parser.run_forever()
 
 
+@app.get('/')
+async def root() -> dict:
+    return {'result': '200'}
+
+
 @app.get('/run/')
 async def run(once: typing.Optional[bool] = False) -> dict:
     if (parser.future_time - datetime.utcnow()).seconds > 600:
