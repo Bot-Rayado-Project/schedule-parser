@@ -65,7 +65,7 @@ async def status() -> dict:
 
 
 @app.get('/delay/')
-async def delay(set: typing.Optional[bool], value: typing.Optional[int]) -> dict:
+async def delay(set: typing.Optional[bool] = False, value: typing.Optional[int] = 86400) -> dict:
     if set and value is not None:
         try:
             int(value)
