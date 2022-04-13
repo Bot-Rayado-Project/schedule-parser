@@ -13,6 +13,7 @@ EADRESS = os.environ.get('EADRESS')
 EPASSWORD = os.environ.get('EPASSWORD')
 REPEAT_DELAY = os.environ.get('REPEAT_DELAY') or 86400
 DEBUG = os.environ.get('DEBUG') or False
+NO_FIRST_START = os.environ.get('NO_FIRST_START') or False
 
 something_is_running: bool = False
 

@@ -10,7 +10,8 @@ app = FastAPI()
 
 parser = Parser()
 
-parser.run_forever()
+if not c.NO_FIRST_START:
+    parser.run_forever()
 
 
 @app.get('/')
