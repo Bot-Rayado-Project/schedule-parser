@@ -39,7 +39,10 @@ async def db_write_schedule(connection: asyncpg.Connection, group: str, dayofwee
     '''Записывает расписание для нужной группы, дня недели, четной или нечетной недели'''
     even: bool = True if weektype == 'четная' else False
     database_responce: list = await connection.fetch(f"SELECT schedule FROM schedule_table WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
-    try:
+    if len(database_responce) == 0:
+        logger.info(f'Успешно записано {dayofweek}, {group}, {weektype}')
+        await connection.fetchrow(f"INSERT INTO schedule_table VALUES('{group}','{dayofweek}','{schedule}',{even});")
+    else:
         _database_responce = dict(database_responce[0])
         if _database_responce['schedule'] == schedule:
             # logger.info(f'Изменений нет в {dayofweek}, {group}, {weektype}')
@@ -48,8 +51,19 @@ async def db_write_schedule(connection: asyncpg.Connection, group: str, dayofwee
             _responce = _database_responce['schedule']
             logger.info(f'Сходство строк: {jellyfish.jaro_similarity(schedule, str(_responce))}')
             await connection.fetchrow(f"UPDATE schedule_table SET schedule = '{schedule}' WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
+
+            # Удаление измененного дня
+            database_responce: list = await connection.fetch(f"SELECT schedule FROM schedule_table_customized WHERE streamgroup='{group}' AND dayofweek = '{dayofweek}' AND even='{even}'")
+            if len(database_responce) == 0:
+                pass
+            else:
+                await connection.fetchrow(f"DELETE FROM schedule_table_customized WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
+
+            # Удаление аннотации
+            database_responce: list = await connection.fetch(f"SELECT annotation FROM schedule_table_annotations WHERE streamgroup='{group}' AND dayofweek = '{dayofweek}' AND even='{even}'")
+            if len(database_responce) == 0:
+                pass
+            else:
+                await connection.fetchrow(f"DELETE FROM schedule_table_annotations WHERE streamgroup = '{group}' AND dayofweek = '{dayofweek}' AND even = '{even}';")
+
             logger.info(f'Успешно перезаписано {dayofweek}, {group}, {weektype}')
-    except Exception:
-        logger.info(f'Успешно записано {dayofweek}, {group}, {weektype}')
-        await connection.fetchrow(f"INSERT INTO schedule_table VALUES('{group}','{dayofweek}','{schedule}',{even});")
-        pass
