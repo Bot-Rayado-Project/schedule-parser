@@ -8,6 +8,7 @@ class NoneException(Exception):
 DBUSER = os.environ.get('DBUSER')
 DBNAME = os.environ.get('DBNAME')
 DBHOST = os.environ.get('DBHOST')
+DBPORT = os.environ.get('DBPORT')
 DBPASSWORD = os.environ.get('DBPASSWORD')
 EADRESS = os.environ.get('EADRESS')
 EPASSWORD = os.environ.get('EPASSWORD')
@@ -39,7 +40,7 @@ GROUPS = ['бвт2101', 'бвт2102', 'бвт2103', 'бвт2104', 'бвт2105', 
           'бик2107', 'бик2108', 'бик2109', 'бээ2101', 'бби2101', 'бэр2101',
           'бин2101', 'бин2102', 'бин2103', 'бин2104', 'бин2105', 'бин2106',
           'бин2107', 'бин2108', 'бин2109', 'бин2110']
-WEEKTYPES = ['четная', 'нечетная']
+PARITIES = ['четная', 'нечетная']
 
 WEEK_COLUMN_GROUPS = {
     'бвт2101': 'D',

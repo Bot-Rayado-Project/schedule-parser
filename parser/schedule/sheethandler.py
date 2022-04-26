@@ -4,7 +4,7 @@ import asyncio
 import openpyxl
 
 from parser.utils.constants_blueprint import GROUP_MATCHING_SCHEDULE
-from parser.utils.constants import WEEK_COLUMN_GROUPS, DAYS, WEEKTYPES, GROUPS
+from parser.utils.constants import WEEK_COLUMN_GROUPS, DAYS, PARITIES, GROUPS
 from parser.utils.logger import get_logger
 from parser.schedule.streams.KIIB.zrs import get_schedule_zrs
 from database.db import db_write_schedule
@@ -52,30 +52,26 @@ async def write_schedule(day_input: str, group_input: str, week_type: str) -> st
         return None
 
 
-async def get_schedules(connection: asyncpg.Connection) -> None:
+async def get_schedules() -> None:
     counter = 0
     errors = {}
     logger.info('Writing schedules...')
     for day in DAYS:
         for group in GROUPS:
-            for weektype in WEEKTYPES:
+            for parity in PARITIES:
                 try:
-                    schedule = await write_schedule(day, group, weektype)
+                    schedule = await write_schedule(day, group, parity)
                     if schedule is not None:
                         counter += 1
-                        await db_write_schedule(connection,
-                                                translit(group, "ru", reversed=True),
-                                                str(translit(day, "ru", reversed=True)).replace("'", ""),
-                                                weektype,
-                                                schedule)
+                        await db_write_schedule(translit(group, "ru", reversed=True), str(translit(day, "ru", reversed=True)).replace("'", ""), parity, schedule)
                     else:
-                        logger.error(f'Ошибка в {day}, {group}, {weektype} во время парсинга таблицы. Обновление отменено.')
+                        logger.error(f'Ошибка в {day}, {group}, {parity} во время парсинга таблицы. Обновление отменено.')
                         await asyncio.sleep(0.33)
                 except Exception:
-                    errors[f"{day}, {group}, {weektype}"] = traceback.format_exc()
+                    errors[f"{day}, {group}, {parity}"] = traceback.format_exc()
                     await asyncio.sleep(0.33)
                     pass
-    if counter == 624:
-        logger.info(f'Все таблицы загружены ({counter}/624)')
+    if counter == len(DAYS) * len(GROUPS) * len(PARITIES):
+        logger.info(f'Все таблицы загружены ({counter}/{(len(DAYS) * len(GROUPS) * len(PARITIES))})')
     else:
-        logger.error(f'({counter}/624) таблиц загружено. Ошибка в {errors}')
+        logger.error(f'({counter}/{(len(DAYS) * len(GROUPS) * len(PARITIES))}) таблиц загружено. Ошибка в {errors}')

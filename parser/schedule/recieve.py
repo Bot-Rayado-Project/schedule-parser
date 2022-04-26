@@ -8,7 +8,6 @@ import parser.utils.constants as c
 from parser.schedule.sheethandler import get_schedules
 from parser.utils.constants import STREAMS, STREAMS_IDS, DBUSER, DBPASSWORD, DBHOST, DBNAME, DEBUG
 from parser.utils.logger import get_logger
-from database.db import db_connect, db_close
 from bs4 import BeautifulSoup
 
 logger = get_logger(__name__)
@@ -54,34 +53,14 @@ async def get_links() -> None | int:
                             continue
         if counter == len(STREAMS_IDS):
             logger.info(f'Все таблицы загружены ({counter}/{len(STREAMS_IDS)})')
+            c.something_is_running = True
+            await get_schedules()
+            c.something_is_running = False
+            return 0
         else:
             logger.error(f'({counter}/{len(STREAMS_IDS)}) таблиц загружено. Ошибка в {errors}. Выполняется попытка {tries-1}: {traceback.format_exc()}')
             tries -= 1
             await asyncio.sleep(0.33)
             continue
-        if not DEBUG:
-            c.something_is_running = True
-            connection = await db_connect(str(DBUSER), str(DBPASSWORD), str(DBNAME), str(DBHOST))
-            if connection is None:
-                c.something_is_running = False
-                return None
-            else:
-                c.something_is_running = True
-                await get_schedules(connection)
-                await db_close(connection)
-                c.something_is_running = False
-                return 0
-        else:
-            c.something_is_running = True
-            logger.info('Doing parsing stuff...')
-
-            async def test():
-                for i in range(10):
-                    print(i)
-                    await asyncio.sleep(1)
-
-            await test()
-            c.something_is_running = False
-            return 0
     c.something_is_running = False
     return None

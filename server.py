@@ -1,6 +1,7 @@
 from parser.parser import Parser
 from fastapi import FastAPI
 from datetime import datetime
+
 import parser.utils.constants as c
 import typing
 import asyncio
@@ -12,11 +13,6 @@ parser = Parser()
 
 if not c.NO_FIRST_START:
     parser.run_forever()
-
-
-@app.get('/')
-async def root() -> dict:
-    return {'result': '200'}
 
 
 @app.get('/run/')
