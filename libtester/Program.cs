@@ -1,5 +1,5 @@
-﻿using static parser.TableDownloader;
+﻿using Parser;
 
-var bookLinks = GetBookLinks("https://mtuci.ru/time-table/");
-Console.WriteLine("Found {0} links", bookLinks.Count);
-bookLinks.ForEach(x => Console.WriteLine(x));
+IParserWorker parser = new ParserWorker();
+parser.RunForever();
+
