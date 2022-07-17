@@ -1,10 +1,14 @@
-using Parser.Core;
+using Parser.Core.HtmlParser;
+using Parser.Core.TablesDownloader;
+using Parser.Core.LinkHandler;
 
 namespace Parser;
 
 public class ParserWorker : IParserWorker
 {
     private readonly IHtmlParser htmlParser = new HtmlParser();
+    private readonly ITablesDownloader tablesDownloader = new TablesDownloader();
+    private readonly ILinkHandler linkHandler = new LinkHandler();
     public bool IgnoreErrors { get; set; } = true;
     private bool FirstStart { get; set; } = true;
     private bool isRunForever { get; set; } = false;
@@ -38,17 +42,25 @@ public class ParserWorker : IParserWorker
     {
         if (FirstStart)
         {
-            System.Console.WriteLine("here");
             FirstStart = false;
-            var res = await htmlParser.GetTablesLinksAsync("https://mtuci.ru/time-table/");
-            res.ForEach(x => Console.WriteLine(x));
+            List<string> links = await htmlParser.GetTablesLinksAsync("https://mtuci.ru/time-table/");
+            Dictionary<string, List<string>> linksInfo = new Dictionary<string, List<string>>();
+            foreach (var link in links)
+            {
+                linksInfo.Add(link, await linkHandler.GetLinkInfo(link));
+            }
+            await tablesDownloader.DownloadTables(linksInfo);
         }
         else
         {
-            System.Console.WriteLine("here 2");
             await Task.Delay(5000);
-            var res = await htmlParser.GetTablesLinksAsync("https://mtuci.ru/time-table/");
-            res.ForEach(x => Console.WriteLine(x));
+            List<string> links = await htmlParser.GetTablesLinksAsync("https://mtuci.ru/time-table/");
+            Dictionary<string, List<string>> linksInfo = new Dictionary<string, List<string>>();
+            foreach (var link in links)
+            {
+                linksInfo.Add(link, await linkHandler.GetLinkInfo(link));
+            }
+            await tablesDownloader.DownloadTables(linksInfo);
         }
     }
 }

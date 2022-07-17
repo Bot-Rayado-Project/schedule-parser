@@ -1,9 +1,9 @@
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 
-namespace Parser.Core;
+namespace Parser.Core.HtmlParser;
 
-public class HtmlParser : IHtmlParser
+internal class HtmlParser : IHtmlParser
 {
     private static readonly HttpClient httpClient = new HttpClient();
     public async Task<List<string>> GetTablesLinksAsync(string url)
@@ -33,8 +33,8 @@ public class HtmlParser : IHtmlParser
                 && _href.Contains(".xlsx")
                 && !_href.Contains("tszopb")
                 && !_href.Contains("tszopm")
-                && Regex.Match(_href, @"\d*\D*kurs").Success
-                && Regex.Match(_href, @"\d*\.\d*\.\d*").Success) tablesList.Add(new Uri(baseUri, href).AbsoluteUri);
+                && Regex.Match(_href, @"\d\D*kurs").Success
+                && Regex.Match(_href, @"\d+\.\d+\.\d+").Success) tablesList.Add(new Uri(baseUri, href).AbsoluteUri);
         }
         return tablesList;
     }
