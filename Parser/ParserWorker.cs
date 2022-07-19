@@ -1,6 +1,7 @@
 using Parser.Core.HtmlParser;
 using Parser.Core.TablesDownloader;
 using Parser.Core.LinkHandler;
+using Parser.Core.TablesParser;
 
 namespace Parser;
 
@@ -9,6 +10,7 @@ public class ParserWorker : IParserWorker
     private readonly IHtmlParser htmlParser = new HtmlParser();
     private readonly ITablesDownloader tablesDownloader = new TablesDownloader();
     private readonly ILinkHandler linkHandler = new LinkHandler();
+    private readonly TablesParser tablesParser = new TablesParser();
     public bool IgnoreErrors { get; set; } = true;
     private bool FirstStart { get; set; } = true;
     private bool isRunForever { get; set; } = false;
@@ -49,7 +51,9 @@ public class ParserWorker : IParserWorker
             {
                 linksInfo.Add(link, await linkHandler.GetLinkInfo(link));
             }
-            await tablesDownloader.DownloadTables(linksInfo);
+            //await tablesDownloader.DownloadTables(linksInfo);
+            // хардкод 
+            await tablesParser.OpenTable("tables/1_it_02.03.02.xlsx");
         }
         else
         {
