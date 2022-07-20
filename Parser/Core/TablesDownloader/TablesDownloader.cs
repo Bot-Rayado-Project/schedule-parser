@@ -5,9 +5,10 @@ internal class TablesDownloader : ITablesDownloader
     private static readonly HttpClient httpClient = new HttpClient();
     public async Task DownloadTables(Dictionary<string, List<string>> linksInfo)
     {
+        if (!Directory.Exists("./tables")) Directory.CreateDirectory("./tables");
         foreach (KeyValuePair<string, List<string>> kvp in linksInfo)
         {
-            string filePath = $"tables/{kvp.Value[0]}_{kvp.Value[1]}_{kvp.Value[2]}.xlsx";
+            string filePath = $"./tables/{kvp.Value[0]}_{kvp.Value[1]}_{kvp.Value[2]}.xlsx";
             if (File.Exists(filePath)) File.Delete(filePath);
             using (var stream = await httpClient.GetStreamAsync(kvp.Key))
             {
