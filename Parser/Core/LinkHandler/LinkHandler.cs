@@ -15,22 +15,22 @@ public class LinkHandler : ILinkHandler
     /// </summary>
     /// <param name="url"></param>
     /// <returns>List<string></returns>
-    public async Task<List<string>> GetLinkInfo(string url)
+    public async Task<List<string>> GetLinkInfo(string url, CancellationToken token)
     {
-        var grade = await Task.Run(() => GetGrade(url));
-        var faculty = await Task.Run(() => GetFaculty(url));
-        var stream = await Task.Run(() => GetStream(url));
+        var grade = await Task.Run(() => GetGrade(url, token));
+        var faculty = await Task.Run(() => GetFaculty(url, token));
+        var stream = await Task.Run(() => GetStream(url, token));
         return new List<string>() { grade, faculty, stream };
     }
 
-    private string GetGrade(string url)
+    private string GetGrade(string url, CancellationToken token)
     {
         MatchCollection matches = gradeRx.Matches(url);
         if (matches.Count != 1) throw new Exception($"Found more than 1 grade patterns in link {url}");
         return matches[0].Value.Substring(0, 1);
     }
 
-    private string GetFaculty(string url)
+    private string GetFaculty(string url, CancellationToken token)
     {
         string _url = url.ToLower();
         foreach (string faculty in faculties)
@@ -40,7 +40,7 @@ public class LinkHandler : ILinkHandler
         throw new Exception($"Faculty not found in link {url}");
     }
 
-    private string GetStream(string url)
+    private string GetStream(string url, CancellationToken token)
     {
         MatchCollection matches = streamRx.Matches(url);
         if (matches.Count != 1) throw new Exception($"Found more than 1 stream patterns in link {url}\n{matches.Count}");

@@ -4,5 +4,6 @@ public enum ParserStates : byte
 {
     isStopped,
     isRunningForever,
-    isRunningOnce
+    isRunningOnce,
+    isSuspended
 }

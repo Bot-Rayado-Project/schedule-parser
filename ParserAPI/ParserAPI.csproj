@@ -14,4 +14,8 @@
     <ProjectReference Include="..\Parser\Parser.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  
 </Project>

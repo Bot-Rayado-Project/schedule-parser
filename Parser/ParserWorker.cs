@@ -15,6 +15,7 @@ public class ParserWorker : IParserWorker
     private string MtuciUrl { get; set; }
     private bool IgnoreErrors { get; set; }
     private int Delay { get; set; }
+    private CancellationTokenSource s_cts = new CancellationTokenSource();
     public ParserStates State { get; internal set; } = ParserStates.isStopped;
 
     /// <summary>
@@ -32,30 +33,35 @@ public class ParserWorker : IParserWorker
     /// Main method that forces parser to run forever.
     /// The method itself is not awaited and is creating a task to run on background over main flow.
     /// </summary>
-    public void RunForever()
-    {
-        RunForeverAsync();
-    }
+    public void RunForever() => RunForeverAsync();
 
-    public void RunOnce()
-    {
-        //RunOnceAsync();
-    }
+    /// <summary>
+    /// Starts parser for only one iteration
+    /// </summary>
+    public void RunOnce() => RunOnceAsync();
+
+    /// <summary>
+    /// Stops running tasks with cancelation token
+    /// </summary>
+    public void Stop() { System.Console.WriteLine("Stop command detected. Cancelling task..."); s_cts.Cancel(); State = ParserStates.isStopped; }
 
     /// <summary>
     /// Async version of RunForever
     /// </summary>
-    /// <param name="ignoreErrors"></param>
-    /// <returns></returns>
     private async Task RunForeverAsync()
     {
+        if (s_cts.IsCancellationRequested) { s_cts.Dispose(); s_cts = new CancellationTokenSource(); }
         FirstStart = true;
         State = ParserStates.isRunningForever;
         if (IgnoreErrors)
         {
             while (true)
             {
-                try { await _RunForeverAsync(); }
+                try { await _RunForeverAsync(s_cts.Token); }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Exception in event loop {ex}");
@@ -65,42 +71,81 @@ public class ParserWorker : IParserWorker
         }
         else
         {
-            while (true) await _RunForeverAsync();
+            while (true) await _RunForeverAsync(s_cts.Token);
         }
     }
 
     /// <summary>
     /// Low level method of RunForeverAsync
     /// </summary>
-    /// <returns></returns>
-    private async Task _RunForeverAsync()
+    private async Task _RunForeverAsync(CancellationToken token)
     {
         if (FirstStart)
         {
             FirstStart = false;
-            await Run();
+            await Run(token);
         }
         else
         {
             System.Console.WriteLine($"Another start detected, waiting for {Delay} seconds...");
-            await Task.Delay(Delay);
-            await Run();
+            State = ParserStates.isSuspended;
+            await Task.Delay(Delay, token);
+            while (State == ParserStates.isRunningOnce) { System.Console.WriteLine("Cannot start another pass since is running once"); await Task.Delay(10000, token); }
+            await Run(token);
         }
+    }
+
+    /// <summary>
+    /// Async version of RunOnce
+    /// </summary>
+    private async Task RunOnceAsync()
+    {
+        if (s_cts.IsCancellationRequested) { s_cts.Dispose(); s_cts = new CancellationTokenSource(); }
+        State = ParserStates.isRunningOnce;
+        if (IgnoreErrors)
+        {
+            try
+            {
+                await _RunOnceAsync(s_cts.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in running once {ex}");
+                await Task.Delay(330, s_cts.Token);
+            }
+            finally
+            {
+                State = ParserStates.isStopped;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Low level method of RunOnceAsync
+    /// </summary>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    private async Task _RunOnceAsync(CancellationToken token)
+    {
+        await Run(token);
     }
 
     /// <summary>
     /// Main run method implementing parser logic that is being used in _RunForeverAsync and _RunOnceAsync
     /// </summary>
-    /// <returns></returns>
-    private async Task Run()
+    private async Task Run(CancellationToken token)
     {
-        List<string> links = await htmlParser.GetTablesLinksAsync("https://mtuci.ru/time-table/");
+        List<string> links = await htmlParser.GetTablesLinksAsync("https://mtuci.ru/time-table/", token);
         Dictionary<string, List<string>> linksInfo = new Dictionary<string, List<string>>();
         foreach (var link in links)
         {
-            linksInfo.Add(link, await linkHandler.GetLinkInfo(link));
+            linksInfo.Add(link, await linkHandler.GetLinkInfo(link, token));
         }
-        await tablesDownloader.DownloadTables(linksInfo);
+        await tablesDownloader.DownloadTables(linksInfo, token);
         //await tablesParser.OpenTable("tables/1_it_02.03.02.xlsx");
     }
 }
