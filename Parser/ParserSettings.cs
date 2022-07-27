@@ -1,8 +1,10 @@
 namespace Parser;
 
-public class ParserSettings
+public class ParserSettings : IParserSettings
 {
-    public string MtuciUrl { get; set; } = "https://mtuci.ru/time-table/";
+    public string Url { get; set; } = "https://mtuci.ru/time-table/";
+
     public bool IgnoreErrors { get; set; } = true;
+
     public int Delay { get; set; } = 84000;
 }

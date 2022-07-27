@@ -7,7 +7,7 @@
 .vscode/
 
 # Testing
-libtester/
+ParserTester/
 
 # Excel
 *.xlsx

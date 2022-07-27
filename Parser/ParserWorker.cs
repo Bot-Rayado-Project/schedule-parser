@@ -7,10 +7,10 @@ namespace Parser;
 
 public class ParserWorker : IParserWorker
 {
-    private readonly IHtmlParser htmlParser = new HtmlParser();
-    private readonly ITablesDownloader tablesDownloader = new TablesDownloader();
-    private readonly ILinkHandler linkHandler = new LinkHandler();
-    private readonly TablesParser tablesParser = new TablesParser();
+    private readonly IHtmlParser htmlParser;
+    private readonly ITablesDownloader tablesDownloader;
+    private readonly ILinkHandler linkHandler;
+    private readonly TablesParser tablesParser;
     private bool FirstStart { get; set; } = true;
     private string MtuciUrl { get; set; }
     private bool IgnoreErrors { get; set; }
@@ -24,6 +24,10 @@ public class ParserWorker : IParserWorker
     /// <param name="parserSettings"></param>
     public ParserWorker(ParserSettings parserSettings)
     {
+        htmlParser = new HtmlParser();
+        tablesDownloader = new TablesDownloader();
+        linkHandler = new LinkHandler();
+        tablesParser = new TablesParser();
         MtuciUrl = parserSettings.MtuciUrl;
         IgnoreErrors = parserSettings.IgnoreErrors;
         Delay = parserSettings.Delay;
@@ -87,7 +91,7 @@ public class ParserWorker : IParserWorker
         }
         else
         {
-            System.Console.WriteLine($"Another start detected, waiting for {Delay} seconds...");
+            System.Console.WriteLine($"Another start detected, waiting for {Delay} miliseconds...");
             State = ParserStates.isSuspended;
             await Task.Delay(Delay, token);
             while (State == ParserStates.isRunningOnce) { System.Console.WriteLine("Cannot start another pass since is running once"); await Task.Delay(10000, token); }
@@ -128,7 +132,6 @@ public class ParserWorker : IParserWorker
     /// Low level method of RunOnceAsync
     /// </summary>
     /// <param name="token"></param>
-    /// <returns></returns>
     private async Task _RunOnceAsync(CancellationToken token)
     {
         await Run(token);
@@ -137,6 +140,7 @@ public class ParserWorker : IParserWorker
     /// <summary>
     /// Main run method implementing parser logic that is being used in _RunForeverAsync and _RunOnceAsync
     /// </summary>
+    /// <param name="token"></param>
     private async Task Run(CancellationToken token)
     {
         List<string> links = await htmlParser.GetTablesLinksAsync("https://mtuci.ru/time-table/", token);
@@ -145,7 +149,7 @@ public class ParserWorker : IParserWorker
         {
             linksInfo.Add(link, await linkHandler.GetLinkInfo(link, token));
         }
-        await tablesDownloader.DownloadTables(linksInfo, token);
-        //await tablesParser.OpenTable("tables/1_it_02.03.02.xlsx");
+        //await tablesDownloader.DownloadTables(linksInfo, token);
+        await tablesParser.Parse("tables/1_it_02.03.02.xlsx");
     }
 }

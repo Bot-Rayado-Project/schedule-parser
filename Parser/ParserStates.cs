@@ -1,9 +1,12 @@
 namespace Parser;
 
-public enum ParserStates : byte
+public enum ParserStates
 {
     isStopped,
+
     isRunningForever,
+
     isRunningOnce,
+
     isSuspended
 }
