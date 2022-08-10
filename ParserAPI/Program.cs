@@ -38,7 +38,7 @@ if (app.Environment.IsDevelopment())
 IParserWorker parser = new ParserWorker(new ScheduleParser());
 
 // Create parser settings
-parser.Settings = new ScheduleParserSettings();
+parser.Settings = new ScheduleParserSettings(Environment.GetEnvironmentVariable("EmailAdress"), Environment.GetEnvironmentVariable("EmailPassword"));
 
 
 app.MapGet("/api/v1/start", (bool runOnce) =>

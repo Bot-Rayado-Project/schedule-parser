@@ -6,4 +6,6 @@ public interface IParserSettings
     public bool IgnoreErrors { get; set; }
     public int Delay { get; set; }
     public string DownloadPath { get; set; }
+    public string EmailAdress { get; set; }
+    public string EmailPassword { get; set; }
 }

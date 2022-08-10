@@ -1,5 +1,7 @@
 using Parser.Core;
 using HtmlAgilityPack;
+using System.Net.Mail;
+using System.Net;
 
 namespace Parser;
 
@@ -9,6 +11,7 @@ public class ParserWorker : IParserWorker
 
     public ParserStates State { get; private set; } = ParserStates.isStopped;
     public IParser Parser { get; set; }
+    private SmtpClient smtpClient;
     private HtmlLoader htmlLoader;
     private HtmlParser htmlParser;
     private LinksParser linksParser;
@@ -29,6 +32,12 @@ public class ParserWorker : IParserWorker
             linksParser = new LinksParser();
             tablesDownloader = new TablesDownloader(value);
             tableLoader = new TableLoader();
+            smtpClient = new SmtpClient("smtp.gmail.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential(value.EmailAdress, value.EmailPassword),
+                EnableSsl = true,
+            };
         }
     }
 
@@ -91,6 +100,7 @@ public class ParserWorker : IParserWorker
 
     private async Task Worker(bool isRunOnce = false)
     {
+        smtpClient.Send(Settings.EmailAdress, Settings.EmailAdress, "Error in Schedule Parser", "Cum");
         var source = await htmlLoader.GetHtmlAsync();
 
         var htmlDocument = new HtmlDocument();
