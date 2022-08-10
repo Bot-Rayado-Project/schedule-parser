@@ -1,155 +1,71 @@
-using Parser.Core.HtmlParser;
-using Parser.Core.TablesDownloader;
-using Parser.Core.LinkHandler;
-using Parser.Core.TablesParser;
+using Parser.Core;
+using HtmlAgilityPack;
 
 namespace Parser;
 
-public class ParserWorker : IParserWorker
+public class ParserWorker
 {
-    private readonly IHtmlParser htmlParser;
-    private readonly ITablesDownloader tablesDownloader;
-    private readonly ILinkHandler linkHandler;
-    private readonly TablesParser tablesParser;
-    private bool FirstStart { get; set; } = true;
-    private string MtuciUrl { get; set; }
-    private bool IgnoreErrors { get; set; }
-    private int Delay { get; set; }
-    private CancellationTokenSource s_cts = new CancellationTokenSource();
-    public ParserStates State { get; internal set; } = ParserStates.isStopped;
+    #region Properties
 
-    /// <summary>
-    /// Class constructor. Need to pass ParserSettings objects to initialize parser.
-    /// </summary>
-    /// <param name="parserSettings"></param>
-    public ParserWorker(ParserSettings parserSettings)
+    public IParser Parser { get; set; }
+    private HtmlLoader htmlLoader;
+    private HtmlParser htmlParser;
+    private LinksParser linksParser;
+    private TablesDownloader tablesDownloader;
+    private TableLoader tableLoader;
+    private IParserSettings settings;
+    public IParserSettings Settings
     {
-        htmlParser = new HtmlParser();
-        tablesDownloader = new TablesDownloader();
-        linkHandler = new LinkHandler();
-        tablesParser = new TablesParser();
-        MtuciUrl = parserSettings.MtuciUrl;
-        IgnoreErrors = parserSettings.IgnoreErrors;
-        Delay = parserSettings.Delay;
-    }
-
-    /// <summary>
-    /// Main method that forces parser to run forever.
-    /// The method itself is not awaited and is creating a task to run on background over main flow.
-    /// </summary>
-    public void RunForever() => RunForeverAsync();
-
-    /// <summary>
-    /// Starts parser for only one iteration
-    /// </summary>
-    public void RunOnce() => RunOnceAsync();
-
-    /// <summary>
-    /// Stops running tasks with cancelation token
-    /// </summary>
-    public void Stop() { System.Console.WriteLine("Stop command detected. Cancelling task..."); s_cts.Cancel(); State = ParserStates.isStopped; }
-
-    /// <summary>
-    /// Async version of RunForever
-    /// </summary>
-    private async Task RunForeverAsync()
-    {
-        if (s_cts.IsCancellationRequested) { s_cts.Dispose(); s_cts = new CancellationTokenSource(); }
-        FirstStart = true;
-        State = ParserStates.isRunningForever;
-        if (IgnoreErrors)
+        get
         {
-            while (true)
-            {
-                try { await _RunForeverAsync(s_cts.Token); }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Exception in event loop {ex}");
-                    await Task.Delay(330);
-                }
-            }
+            return settings;
         }
-        else
+        set
         {
-            while (true) await _RunForeverAsync(s_cts.Token);
+            settings = value;
+            htmlLoader = new HtmlLoader(value);
+            htmlParser = new HtmlParser(value);
+            linksParser = new LinksParser();
+            tablesDownloader = new TablesDownloader(value);
+            tableLoader = new TableLoader();
         }
     }
 
-    /// <summary>
-    /// Low level method of RunForeverAsync
-    /// </summary>
-    private async Task _RunForeverAsync(CancellationToken token)
+    #endregion
+
+    public ParserWorker(IParser parser)
     {
-        if (FirstStart)
-        {
-            FirstStart = false;
-            await Run(token);
-        }
-        else
-        {
-            System.Console.WriteLine($"Another start detected, waiting for {Delay} miliseconds...");
-            State = ParserStates.isSuspended;
-            await Task.Delay(Delay, token);
-            while (State == ParserStates.isRunningOnce) { System.Console.WriteLine("Cannot start another pass since is running once"); await Task.Delay(10000, token); }
-            await Run(token);
-        }
+        Parser = parser;
     }
 
-    /// <summary>
-    /// Async version of RunOnce
-    /// </summary>
-    private async Task RunOnceAsync()
+    public ParserWorker(IParser parser, IParserSettings settings) : this(parser)
     {
-        if (s_cts.IsCancellationRequested) { s_cts.Dispose(); s_cts = new CancellationTokenSource(); }
-        State = ParserStates.isRunningOnce;
-        if (IgnoreErrors)
-        {
-            try
-            {
-                await _RunOnceAsync(s_cts.Token);
-            }
-            catch (TaskCanceledException)
-            {
-                return;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Exception in running once {ex}");
-                await Task.Delay(330, s_cts.Token);
-            }
-            finally
-            {
-                State = ParserStates.isStopped;
-            }
-        }
+        Settings = settings;
     }
 
-    /// <summary>
-    /// Low level method of RunOnceAsync
-    /// </summary>
-    /// <param name="token"></param>
-    private async Task _RunOnceAsync(CancellationToken token)
+    public void RunForever()
     {
-        await Run(token);
+        Worker();
     }
 
-    /// <summary>
-    /// Main run method implementing parser logic that is being used in _RunForeverAsync and _RunOnceAsync
-    /// </summary>
-    /// <param name="token"></param>
-    private async Task Run(CancellationToken token)
+    private async Task Worker()
     {
-        List<string> links = await htmlParser.GetTablesLinksAsync("https://mtuci.ru/time-table/", token);
-        Dictionary<string, List<string>> linksInfo = new Dictionary<string, List<string>>();
-        foreach (var link in links)
+        var source = await htmlLoader.GetHtmlAsync();
+
+        var htmlDocument = new HtmlDocument();
+        htmlDocument.LoadHtml(source);
+
+        var links = htmlParser.Parse(htmlDocument);
+
+        var linksInfo = linksParser.Parse(links);
+
+        var tablesPaths = await tablesDownloader.DownloadTablesAsync(linksInfo);
+
+        foreach (var path in tablesPaths)
         {
-            linksInfo.Add(link, await linkHandler.GetLinkInfo(link, token));
+            System.Console.WriteLine(path);
+            var package = await tableLoader.OpenTable(path);
+            Parser.Parse(package);
         }
-        //await tablesDownloader.DownloadTables(linksInfo, token);
-        await tablesParser.Parse("tables/1_it_02.03.02.xlsx");
     }
 }

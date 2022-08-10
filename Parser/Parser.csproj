@@ -4,12 +4,13 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>CS4014</NoWarn>
+    <NoWarn>CS4014, CS8618, CS8602</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="epplus" Version="6.0.6" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.43" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.5" />
   </ItemGroup>
 
 </Project>
