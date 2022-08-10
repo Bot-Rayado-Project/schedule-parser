@@ -1,4 +1,5 @@
 using Parser;
+using Parser.Core.ScheduleParser;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +10,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Version = "v1.1",
+        Version = "v2.0.0",
         Title = "Parser API",
         Description = "An ASP.NET Core Web API for managing schedule parsers' work",
         Contact = new OpenApiContact
@@ -34,19 +35,22 @@ if (app.Environment.IsDevelopment())
 }
 
 // Create parser instance
-IParserWorker parser = new ParserWorker(new ParserSettings() /*{Delay = 5000}*/);
+IParserWorker parser = new ParserWorker(new ScheduleParser());
+
+// Create parser settings
+parser.Settings = new ScheduleParserSettings();
 
 
 app.MapGet("/api/v1/start", (bool runOnce) =>
 {
-    if (parser.State == ParserStates.isStopped)
+    if (parser.State == Parser.ParserStates.isStopped)
     {
         if (runOnce) parser.RunOnce();
         else parser.RunForever();
         return Results.Ok(new { Message = "OK" });
     }
-    else if (parser.State == ParserStates.isSuspended && runOnce) { parser.RunOnce(); return Results.Ok(new { Message = "OK" }); }
-    return Results.BadRequest(new { Message = "Another instance of parser is already running" });
+    else if (parser.State == Parser.ParserStates.isSuspended && runOnce) { parser.RunOnce(); return Results.Ok(new { Message = "OK" }); }
+    else return Results.BadRequest(new { Message = "Another instance of parser is already running" });
 });
 
 app.MapGet("/api/v1/state", () =>
@@ -56,8 +60,8 @@ app.MapGet("/api/v1/state", () =>
 
 app.MapGet("/api/v1/stop", () =>
 {
-    if (parser.State != ParserStates.isStopped) { parser.Stop(); return Results.Ok(new { Message = "OK" }); }
-    return Results.Ok(new { Message = "No running instance detected" });
+    if (parser.State != Parser.ParserStates.isStopped) { parser.Stop(); return Results.Ok(new { Message = "OK" }); }
+    else return Results.Ok(new { Message = "No running instance detected" });
 });
 
 app.Run();

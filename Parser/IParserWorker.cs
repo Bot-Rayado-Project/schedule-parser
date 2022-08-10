@@ -2,9 +2,10 @@ namespace Parser;
 
 public interface IParserWorker
 {
-    ParserStates State { get; }
-    void RunForever();
-    void RunOnce();
-    void Stop();
+    public IParserSettings Settings { get; set; }
+    public ParserStates State { get; }
+    public void RunForever();
+    public void RunOnce();
+    public void Stop();
 }
 

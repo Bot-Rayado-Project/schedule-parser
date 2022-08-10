@@ -3,10 +3,11 @@ using HtmlAgilityPack;
 
 namespace Parser;
 
-public class ParserWorker
+public class ParserWorker : IParserWorker
 {
     #region Properties
 
+    public ParserStates State { get; private set; } = ParserStates.isStopped;
     public IParser Parser { get; set; }
     private HtmlLoader htmlLoader;
     private HtmlParser htmlParser;
@@ -42,13 +43,53 @@ public class ParserWorker
     {
         Settings = settings;
     }
-
     public void RunForever()
     {
-        Worker();
+        _RunForever();
     }
 
-    private async Task Worker()
+    public async void _RunForever()
+    {
+        if (State == ParserStates.isStopped)
+        {
+            State = ParserStates.isRunningForever;
+
+            if (!Settings.IgnoreErrors)
+            {
+                while (State == ParserStates.isRunningForever)
+                {
+                    await Worker();
+                }
+            }
+
+            while (State == ParserStates.isRunningForever)
+            {
+                try
+                {
+                    await Worker();
+                }
+                catch (System.Exception ex)
+                {
+                    System.Console.WriteLine("An error occured in event loop: " + ex);
+                }
+            }
+        }
+    }
+    public void RunOnce()
+    {
+        if (State == ParserStates.isStopped || State == ParserStates.isSuspended)
+        {
+            State = ParserStates.isRunningOnce;
+            Worker(true);
+        }
+    }
+
+    public void Stop()
+    {
+        State = ParserStates.isStopped;
+    }
+
+    private async Task Worker(bool isRunOnce = false)
     {
         var source = await htmlLoader.GetHtmlAsync();
 
@@ -67,5 +108,13 @@ public class ParserWorker
             var package = await tableLoader.OpenTable(path);
             Parser.Parse(package);
         }
+
+        if (!isRunOnce)
+        {
+            State = ParserStates.isSuspended;
+            System.Console.WriteLine($"Sleeping for {Settings.Delay} seconds...");
+            await Task.Delay(Settings.Delay);
+        }
+        else State = ParserStates.isStopped;
     }
 }

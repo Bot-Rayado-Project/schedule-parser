@@ -10,8 +10,9 @@ public class ScheduleParserSettings : IParserSettings
 
     public string DownloadPath { get; set; }
 
-    public ScheduleParserSettings(int delay = 84000, string downloadPath = "./tables")
+    public ScheduleParserSettings(bool ignoreErrors = true, int delay = 84000, string downloadPath = "./tables")
     {
+        IgnoreErrors = ignoreErrors;
         Delay = delay;
         DownloadPath = downloadPath;
     }
