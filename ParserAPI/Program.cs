@@ -111,13 +111,12 @@ async Task RunForeverAsync()
         try
         {
             await parser.StartAsync();
-            System.Console.WriteLine("Sleeping for ...");
+            app.Logger.LogInformation($"Sleeping for {parser.Settings.Delay} seconds...");
             await Task.Delay(parser.Settings.Delay);
         }
         catch (System.Exception ex)
         {
-            // TODO
-            System.Console.WriteLine("An error occured in event loop: " + ex);
+            app.Logger.LogCritical("An error occured in event loop: " + ex);
         }
     }
 }
