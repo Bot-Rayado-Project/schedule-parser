@@ -2,15 +2,23 @@ using Parser;
 using Parser.Core.ScheduleParser;
 using Microsoft.OpenApi.Models;
 
+# region Configuration
+
+ParserStates state = ParserStates.isStopped;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
+// Add services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Version = "v2.0.0",
+        Version = "v2.2.3",
         Title = "Parser API",
         Description = "An ASP.NET Core Web API for managing schedule parsers' work",
         Contact = new OpenApiContact
@@ -20,6 +28,7 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+builder.Services.AddSingleton<IParserWorker>(new ParserWorker(new ScheduleParser(), new ScheduleParserSettings()));
 
 var app = builder.Build();
 
@@ -34,34 +43,81 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Create parser instance
-IParserWorker parser = new ParserWorker(new ScheduleParser());
+#endregion
 
-// Create parser settings
-parser.Settings = new ScheduleParserSettings(Environment.GetEnvironmentVariable("EmailAdress"), Environment.GetEnvironmentVariable("EmailPassword"));
-
+var parser = app.Services.GetRequiredService<IParserWorker>();
 
 app.MapGet("/api/v1/start", (bool runOnce) =>
 {
-    if (parser.State == Parser.ParserStates.isStopped)
-    {
-        if (runOnce) parser.RunOnce();
-        else parser.RunForever();
-        return Results.Ok(new { Message = "OK" });
-    }
-    else if (parser.State == Parser.ParserStates.isSuspended && runOnce) { parser.RunOnce(); return Results.Ok(new { Message = "OK" }); }
-    else return Results.BadRequest(new { Message = "Another instance of parser is already running" });
+    if (runOnce) return RunOnce();
+    else return RunForever();
 });
 
 app.MapGet("/api/v1/state", () =>
 {
-    return Results.Ok(new { Message = parser.State.ToString() });
+    return Results.Ok(new { State = state.ToString() });
 });
 
 app.MapGet("/api/v1/stop", () =>
 {
-    if (parser.State != Parser.ParserStates.isStopped) { parser.Stop(); return Results.Ok(new { Message = "OK" }); }
-    else return Results.Ok(new { Message = "No running instance detected" });
+    return Stop();
 });
 
 app.Run();
+
+IResult RunOnce()
+{
+    if (state == ParserStates.isStopped || state == ParserStates.isSuspended)
+    {
+        state = ParserStates.isRunningOnce;
+        RunOnceAsync();
+        return Results.Ok(new { Message = "OK.", State = state.ToString() });
+    }
+    else return Results.BadRequest(new { Message = "Parser already running.", State = state.ToString() });
+}
+
+IResult RunForever()
+{
+    if (state == ParserStates.isStopped)
+    {
+        state = ParserStates.isRunningForever;
+        RunForeverAsync();
+        return Results.Ok(new { Message = "OK.", State = state.ToString() });
+    }
+    else return Results.BadRequest(new { Message = "Parser already running or suspended.", State = state.ToString() });
+}
+
+IResult Stop()
+{
+    if (state != ParserStates.isStopped)
+    {
+        parser.Stop();
+        state = ParserStates.isStopped;
+        return Results.Ok(new { Message = "OK.", State = state.ToString() });
+    }
+    else return Results.BadRequest(new { Message = "Parser already stopped.", State = state.ToString() });
+}
+
+async Task RunOnceAsync()
+{
+    await parser.StartAsync();
+    state = ParserStates.isStopped;
+}
+
+async Task RunForeverAsync()
+{
+    while (state == ParserStates.isRunningForever)
+    {
+        try
+        {
+            await parser.StartAsync();
+            System.Console.WriteLine("Sleeping for ...");
+            await Task.Delay(parser.Settings.Delay);
+        }
+        catch (System.Exception ex)
+        {
+            // TODO
+            System.Console.WriteLine("An error occured in event loop: " + ex);
+        }
+    }
+}

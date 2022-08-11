@@ -11,7 +11,7 @@ internal class TablesDownloader
         downloadPath = settings.DownloadPath;
     }
 
-    public async Task<string[]> DownloadTablesAsync(Dictionary<string, string[]> linksInfo)
+    public async Task<string[]> DownloadTablesAsync(Dictionary<string, string[]> linksInfo, CancellationToken token)
     {
         var list = new List<string>();
 

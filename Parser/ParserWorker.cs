@@ -1,7 +1,5 @@
 using Parser.Core;
 using HtmlAgilityPack;
-using System.Net.Mail;
-using System.Net;
 
 namespace Parser;
 
@@ -9,9 +7,7 @@ public class ParserWorker : IParserWorker
 {
     #region Properties
 
-    public ParserStates State { get; private set; } = ParserStates.isStopped;
     public IParser Parser { get; set; }
-    private SmtpClient smtpClient;
     private HtmlLoader htmlLoader;
     private HtmlParser htmlParser;
     private LinksParser linksParser;
@@ -32,19 +28,15 @@ public class ParserWorker : IParserWorker
             linksParser = new LinksParser();
             tablesDownloader = new TablesDownloader(value);
             tableLoader = new TableLoader();
-            smtpClient = new SmtpClient("smtp.gmail.com")
-            {
-                Port = 587,
-                Credentials = new NetworkCredential(value.EmailAdress, value.EmailPassword),
-                EnableSsl = true,
-            };
         }
     }
+    private CancellationTokenSource s_cts;
 
     #endregion
 
     public ParserWorker(IParser parser)
     {
+        s_cts = new CancellationTokenSource();
         Parser = parser;
     }
 
@@ -52,56 +44,35 @@ public class ParserWorker : IParserWorker
     {
         Settings = settings;
     }
-    public void RunForever()
+
+    public void Start()
     {
-        _RunForever();
+        if (s_cts.IsCancellationRequested)
+        {
+            s_cts.Dispose();
+            s_cts = new CancellationTokenSource();
+        }
+        Worker(s_cts.Token);
     }
 
-    public async void _RunForever()
+    public async Task StartAsync()
     {
-        if (State == ParserStates.isStopped)
+        if (s_cts.IsCancellationRequested)
         {
-            State = ParserStates.isRunningForever;
-
-            if (!Settings.IgnoreErrors)
-            {
-                while (State == ParserStates.isRunningForever)
-                {
-                    await Worker();
-                }
-            }
-
-            while (State == ParserStates.isRunningForever)
-            {
-                try
-                {
-                    await Worker();
-                }
-                catch (System.Exception ex)
-                {
-                    System.Console.WriteLine("An error occured in event loop: " + ex);
-                }
-            }
+            s_cts.Dispose();
+            s_cts = new CancellationTokenSource();
         }
-    }
-    public void RunOnce()
-    {
-        if (State == ParserStates.isStopped || State == ParserStates.isSuspended)
-        {
-            State = ParserStates.isRunningOnce;
-            Worker(true);
-        }
+        await Worker(s_cts.Token);
     }
 
     public void Stop()
     {
-        State = ParserStates.isStopped;
+        s_cts.Cancel();
     }
 
-    private async Task Worker(bool isRunOnce = false)
+    private async Task Worker(CancellationToken token)
     {
-        smtpClient.Send(Settings.EmailAdress, Settings.EmailAdress, "Error in Schedule Parser", "Cum");
-        var source = await htmlLoader.GetHtmlAsync();
+        var source = await htmlLoader.GetHtmlAsync(token);
 
         var htmlDocument = new HtmlDocument();
         htmlDocument.LoadHtml(source);
@@ -110,21 +81,12 @@ public class ParserWorker : IParserWorker
 
         var linksInfo = linksParser.Parse(links);
 
-        var tablesPaths = await tablesDownloader.DownloadTablesAsync(linksInfo);
+        var tablesPaths = await tablesDownloader.DownloadTablesAsync(linksInfo, token);
 
         foreach (var path in tablesPaths)
         {
-            System.Console.WriteLine(path);
-            var package = await tableLoader.OpenTable(path);
+            var package = await tableLoader.OpenTableAsync(path, token);
             Parser.Parse(package);
         }
-
-        if (!isRunOnce)
-        {
-            State = ParserStates.isSuspended;
-            System.Console.WriteLine($"Sleeping for {Settings.Delay} seconds...");
-            await Task.Delay(Settings.Delay);
-        }
-        else State = ParserStates.isStopped;
     }
 }

@@ -4,7 +4,7 @@ namespace Parser.Core;
 
 class TableLoader
 {
-    public async Task<ExcelPackage> OpenTable(string filePath)
+    public async Task<ExcelPackage> OpenTableAsync(string filePath, CancellationToken token)
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 

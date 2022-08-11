@@ -11,7 +11,7 @@ class HtmlLoader
         url = settings.Url;
     }
 
-    public async Task<string> GetHtmlAsync()
+    public async Task<string> GetHtmlAsync(CancellationToken token)
     {
         return await httpClient.GetStringAsync(url);
     }
