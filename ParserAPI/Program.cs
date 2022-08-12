@@ -1,6 +1,8 @@
-using Parser;
-using Parser.Core.ScheduleParser;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
+using ParserDAL.DataAccess;
+using Parser.Core.ScheduleParser;
+using Parser;
 
 # region Configuration
 
@@ -18,6 +20,10 @@ builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), "logs/logg
 builder.Logging.AddMail(Environment.GetEnvironmentVariable("EADRESS"), Environment.GetEnvironmentVariable("EPASSWORD"));
 
 // Add services
+builder.Services.AddDbContext<ScheduleContext>(options =>
+{
+    options.UseNpgsql("Host=localhost;Port=5432;Database=schedules;Username=postgres;Password=postgres");
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -52,7 +58,11 @@ if (app.Environment.IsDevelopment())
 
 var parser = app.Services.GetRequiredService<IParserWorker>();
 
-parser.OnNewData += (object _, string[] data) => System.Console.WriteLine("Cum?");
+parser.OnNewData += (object _, string[] data) =>
+{
+    //var db = app.Services.GetRequiredService<ParserDALContext>();
+    //ParserDALUtils.WriteSchedule(db, "бвт2103", "понедельник", "четная", "CUM!!!");
+};
 
 app.MapGet("/api/v1/start", (bool runOnce) =>
 {
@@ -107,8 +117,15 @@ IResult Stop()
 
 async Task RunOnceAsync()
 {
-    await parser.StartAsync();
-    state = ParserStates.isStopped;
+    try
+    {
+        await parser.StartAsync();
+        state = ParserStates.isStopped;
+    }
+    catch (System.Exception ex)
+    {
+        app.Logger.LogCritical("An error occured in event loop: " + ex);
+    }
 }
 
 async Task RunForeverAsync()
