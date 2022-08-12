@@ -30,9 +30,11 @@ public class ParserWorker : IParserWorker
             tableLoader = new TableLoader();
         }
     }
-    private CancellationTokenSource s_cts;
 
     #endregion
+
+    private CancellationTokenSource s_cts;
+    public event Action<object, string[]> OnNewData;
 
     public ParserWorker(IParser parser)
     {
@@ -86,7 +88,8 @@ public class ParserWorker : IParserWorker
         foreach (var path in tablesPaths)
         {
             var package = await tableLoader.OpenTableAsync(path, token);
-            Parser.Parse(package);
+            var result = Parser.Parse(package);
+            OnNewData.Invoke(this, result);
         }
     }
 }

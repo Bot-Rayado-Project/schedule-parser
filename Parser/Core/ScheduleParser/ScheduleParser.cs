@@ -4,9 +4,11 @@ namespace Parser.Core.ScheduleParser;
 
 public class ScheduleParser : IParser
 {
-    public void Parse(ExcelPackage package)
+    public string[] Parse(ExcelPackage package)
     {
         int wsCount = package.Workbook.Worksheets.Count;
         Console.WriteLine("Worksheets ammount: " + wsCount);
+        // TODO
+        return Array.Empty<string>();
     }
 }

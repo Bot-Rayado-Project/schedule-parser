@@ -4,5 +4,5 @@ namespace Parser;
 
 public interface IParser
 {
-    void Parse(ExcelPackage package);
+    string[] Parse(ExcelPackage package);
 }

@@ -4,6 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>CS4014, CS8618, CS8602</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,9 +14,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Parser\Parser.csproj" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
   
 </Project>

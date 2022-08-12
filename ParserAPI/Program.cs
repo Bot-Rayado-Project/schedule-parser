@@ -8,9 +8,14 @@ ParserStates state = ParserStates.isStopped;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Create logs folder
+if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
+
 // Configure logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), "logs/logger.log"));
+builder.Logging.AddMail(Environment.GetEnvironmentVariable("EADRESS"), Environment.GetEnvironmentVariable("EPASSWORD"));
 
 // Add services
 builder.Services.AddEndpointsApiExplorer();
@@ -46,6 +51,8 @@ if (app.Environment.IsDevelopment())
 #endregion
 
 var parser = app.Services.GetRequiredService<IParserWorker>();
+
+parser.OnNewData += (object _, string[] data) => System.Console.WriteLine("Cum?");
 
 app.MapGet("/api/v1/start", (bool runOnce) =>
 {
@@ -116,7 +123,8 @@ async Task RunForeverAsync()
         }
         catch (System.Exception ex)
         {
-            app.Logger.LogCritical("An error occured in event loop: " + ex);
+            app.Logger.LogCritical("An error occured in event loop: " + ex + $"\nSleeping for {parser.Settings.Delay} seconds...");
+            await Task.Delay(parser.Settings.Delay);
         }
     }
 }
