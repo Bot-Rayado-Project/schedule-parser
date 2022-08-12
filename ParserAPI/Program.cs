@@ -9,6 +9,12 @@ using Parser;
 
 ParserStates state = ParserStates.isStopped;
 
+string? host = Environment.GetEnvironmentVariable("DBHOST") ?? throw new Exception("DBHOST variable not given.");
+string? port = Environment.GetEnvironmentVariable("DBPORT") ?? throw new Exception("DBPORT variable not given.");
+string? dbname = Environment.GetEnvironmentVariable("DBNAME") ?? throw new Exception("DBNAME variable not given.");
+string? username = Environment.GetEnvironmentVariable("DBUSERNAME") ?? throw new Exception("DBUSERNAME variable not given.");
+string? password = Environment.GetEnvironmentVariable("DBPASSWORD") ?? throw new Exception("DBPASSWORD variable not given.");
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Create logs folder
@@ -23,7 +29,7 @@ builder.Logging.AddMail(Environment.GetEnvironmentVariable("EADRESS"), Environme
 // Add services
 builder.Services.AddDbContext<ScheduleContext>(options =>
 {
-    options.UseNpgsql("Host=localhost;Port=5432;Database=schedules;Username=postgres;Password=postgres");
+    options.UseNpgsql($"Host={host};Port={port};Database={dbname};Username={username};Password={password}");
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -64,6 +70,7 @@ parser.OnNewData += (object _, string[] data) =>
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetService<ScheduleContext>();
+        // ЛОГИКА ЗАПИСИ В БД ТУТ!!! МОЖНО ВСТАВИТЬ ДЕЛЕГАТ!!!!
         db.SharedSchedules.Add(new SharedSchedule()
         {
             stream_group = "бвт2103",
