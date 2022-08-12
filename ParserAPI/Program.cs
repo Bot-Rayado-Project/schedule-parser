@@ -1,6 +1,7 @@
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using ParserDAL.DataAccess;
+using ParserDAL.Models;
 using Parser.Core.ScheduleParser;
 using Parser;
 
@@ -29,7 +30,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Version = "v2.2.3",
+        Version = "v2.3.1",
         Title = "Parser API",
         Description = "An ASP.NET Core Web API for managing schedule parsers' work",
         Contact = new OpenApiContact
@@ -60,9 +61,25 @@ var parser = app.Services.GetRequiredService<IParserWorker>();
 
 parser.OnNewData += (object _, string[] data) =>
 {
-    //var db = app.Services.GetRequiredService<ParserDALContext>();
-    //ParserDALUtils.WriteSchedule(db, "бвт2103", "понедельник", "четная", "CUM!!!");
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetService<ScheduleContext>();
+        db.SharedSchedules.Add(new SharedSchedule()
+        {
+            stream_group = "бвт2103",
+            day = "понедельник",
+            parity = "четная",
+            schedule = "CUM!!!",
+        });
+        db.SaveChanges();
+    }
 };
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ScheduleContext>();
+    db.Database.EnsureCreated();
+}
 
 app.MapGet("/api/v1/start", (bool runOnce) =>
 {
