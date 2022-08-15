@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Parser.Core.Models;
 
 namespace Parser.Core;
 
@@ -10,9 +11,9 @@ class LinksParser
     readonly Regex streamRx = new Regex(@"\d+\.\d+\.\d+",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    public Dictionary<string, string[]> Parse(string[] links)
+    public Dictionary<string, TableInfo> Parse(string[] links)
     {
-        Dictionary<string, string[]> dictionary = new Dictionary<string, string[]>();
+        Dictionary<string, TableInfo> dictionary = new();
 
         foreach (var link in links)
         {
@@ -23,19 +24,22 @@ class LinksParser
         return dictionary;
     }
 
-    private string[] GetLinkInfo(string url)
+    private TableInfo GetLinkInfo(string url)
     {
-        var grade = GetGrade(url);
-        var faculty = GetFaculty(url);
-        var stream = GetStream(url);
-        return new string[] { grade, faculty, stream };
+        TableInfo tableInfo = new TableInfo()
+        {
+            Grade = GetGrade(url),
+            Faculty = GetFaculty(url),
+            Stream = GetStream(url)
+        };
+        return tableInfo;
     }
 
-    private string GetGrade(string url)
+    private int GetGrade(string url)
     {
         MatchCollection matches = gradeRx.Matches(url);
         if (matches.Count != 1) throw new Exception($"Found more than 1 grade patterns in link {url}");
-        return matches[0].Value.Substring(0, 1);
+        return Convert.ToInt32(matches[0].Value.Substring(0, 1));
     }
 
     private string GetFaculty(string url)

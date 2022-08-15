@@ -85,10 +85,10 @@ public class ParserWorker : IParserWorker
 
         var tablesPaths = await tablesDownloader.DownloadTablesAsync(linksInfo, token);
 
-        foreach (var path in tablesPaths)
+        foreach (var kvp in tablesPaths)
         {
-            var package = await tableLoader.OpenTableAsync(path, token);
-            var result = Parser.Parse(package);
+            var package = await tableLoader.OpenTableAsync(kvp.Key, token);
+            var result = Parser.Parse(package, kvp.Value);
             OnNewData.Invoke(this, result);
         }
     }

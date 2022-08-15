@@ -1,3 +1,5 @@
+using Parser.Core.Models;
+
 namespace Parser;
 
 internal class TablesDownloader
@@ -11,15 +13,15 @@ internal class TablesDownloader
         downloadPath = settings.DownloadPath;
     }
 
-    public async Task<string[]> DownloadTablesAsync(Dictionary<string, string[]> linksInfo, CancellationToken token)
+    public async Task<Dictionary<string, TableInfo>> DownloadTablesAsync(Dictionary<string, TableInfo> linksInfo, CancellationToken token)
     {
-        var list = new List<string>();
+        var dict = new Dictionary<string, TableInfo>();
 
         if (!Directory.Exists(downloadPath)) Directory.CreateDirectory(downloadPath);
 
-        foreach (KeyValuePair<string, string[]> kvp in linksInfo)
+        foreach (KeyValuePair<string, TableInfo> kvp in linksInfo)
         {
-            string filePath = $"{downloadPath}/{kvp.Value[0]}_{kvp.Value[1]}_{kvp.Value[2]}.xlsx";
+            string filePath = $"{downloadPath}/{kvp.Value.Grade}_{kvp.Value.Faculty}_{kvp.Value.Stream}.xlsx";
             if (File.Exists(filePath)) File.Delete(filePath);
             using (var stream = await httpClient.GetStreamAsync(kvp.Key))
             {
@@ -27,12 +29,12 @@ internal class TablesDownloader
                 {
                     await stream.CopyToAsync(fileStream);
                     long length = new FileInfo(filePath).Length;
-                    list.Add(filePath);
-                    Console.WriteLine($"{kvp.Key}, Grade = {kvp.Value[0]}, Faculty = {kvp.Value[1]}, Stream = {kvp.Value[2]}, File length = {length}");
+                    dict.Add(filePath, kvp.Value);
+                    Console.WriteLine($"{kvp.Key}, Grade = {kvp.Value.Grade}, Faculty = {kvp.Value.Faculty}, Stream = {kvp.Value.Stream}, File length = {length}");
                 }
             }
         }
 
-        return list.ToArray();
+        return dict;
     }
 }
