@@ -2,18 +2,13 @@ namespace Parser.Core.ScheduleParser;
 
 public class ScheduleParserSettings : IParserSettings
 {
-    public string Url { get; set; } = "https://mtuci.ru/time-table/";
-
-    public bool IgnoreErrors { get; set; } = true;
-
-    public int Delay { get; set; }
+    public string Url { get; set; }
 
     public string DownloadPath { get; set; }
 
-    public ScheduleParserSettings(bool ignoreErrors = true, int delay = 84000, string downloadPath = "./tables")
+    public ScheduleParserSettings(string url, string downloadPath)
     {
-        IgnoreErrors = ignoreErrors;
-        Delay = delay;
+        Url = url;
         DownloadPath = downloadPath;
     }
 }

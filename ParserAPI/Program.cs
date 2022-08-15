@@ -9,11 +9,7 @@ using Parser;
 
 ParserStates state = ParserStates.isStopped;
 
-string? host = Environment.GetEnvironmentVariable("DBHOST") ?? throw new Exception("DBHOST variable not given.");
-string? port = Environment.GetEnvironmentVariable("DBPORT") ?? throw new Exception("DBPORT variable not given.");
-string? dbname = Environment.GetEnvironmentVariable("DBNAME") ?? throw new Exception("DBNAME variable not given.");
-string? username = Environment.GetEnvironmentVariable("DBUSERNAME") ?? throw new Exception("DBUSERNAME variable not given.");
-string? password = Environment.GetEnvironmentVariable("DBPASSWORD") ?? throw new Exception("DBPASSWORD variable not given.");
+string connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:Db") ?? throw new Exception("Connection string not given.");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,26 +25,35 @@ builder.Logging.AddMail(Environment.GetEnvironmentVariable("EADRESS"), Environme
 // Add services
 builder.Services.AddDbContext<ScheduleContext>(options =>
 {
-    options.UseNpgsql($"Host={host};Port={port};Database={dbname};Username={username};Password={password}");
+    options.UseNpgsql(connectionString);
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Version = "v2.3.1",
+        Version = "v2.3.2",
         Title = "Parser API",
         Description = "An ASP.NET Core Web API for managing schedule parsers' work",
         Contact = new OpenApiContact
         {
-            Name = "VKontakte",
+            Name = "VK",
             Url = new Uri("https://vk.com/botrayado")
         }
     });
 });
-builder.Services.AddSingleton<IParserWorker>(new ParserWorker(new ScheduleParser(), new ScheduleParserSettings()));
+builder.Services.AddSingleton<IParserWorker>(new ParserWorker(new ScheduleParser(), new ScheduleParserSettings(
+    builder.Configuration["url"],
+    builder.Configuration["downloadPath"])));
 
 var app = builder.Build();
+
+// Create DB
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ScheduleContext>();
+    db.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -81,12 +86,6 @@ parser.OnNewData += (object _, string[] data) =>
         db.SaveChanges();
     }
 };
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ScheduleContext>();
-    db.Database.EnsureCreated();
-}
 
 app.MapGet("/api/v1/start", (bool runOnce) =>
 {
@@ -159,13 +158,13 @@ async Task RunForeverAsync()
         try
         {
             await parser.StartAsync();
-            app.Logger.LogInformation($"Sleeping for {parser.Settings.Delay} seconds...");
-            await Task.Delay(parser.Settings.Delay);
+            app.Logger.LogInformation($"Sleeping for {Convert.ToInt32(app.Configuration["delay"])} seconds...");
+            await Task.Delay(Convert.ToInt32(app.Configuration["delay"]));
         }
         catch (System.Exception ex)
         {
-            app.Logger.LogCritical("An error occured in event loop: " + ex + $"\nSleeping for {parser.Settings.Delay} seconds...");
-            await Task.Delay(parser.Settings.Delay);
+            app.Logger.LogCritical("An error occured in event loop: " + ex + $"\nSleeping for {Convert.ToInt32(app.Configuration["delay"])} seconds...");
+            await Task.Delay(Convert.ToInt32(app.Configuration["delay"]));
         }
     }
 }
