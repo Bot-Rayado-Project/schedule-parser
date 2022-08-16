@@ -10,8 +10,8 @@ using Parser;
 var builder = WebApplication.CreateBuilder(args);
 
 // Get required environment variables
-string? connectionString = builder.Configuration["ConnectionStrings:Db"] ?? throw new Exception("DB Connection string not given.");
-string? logsFileName = builder.Configuration["logsFileName"] ?? "log";
+string connectionString = builder.Configuration["ConnectionStrings:Db"] ?? throw new Exception("DB Connection string not given.");
+string logsFileName = builder.Configuration["logsFileName"] ?? "log";
 string? emailAdress = builder.Configuration["EADRESS"];
 string? emailPassword = builder.Configuration["EPASSWORD"];
 string? url = builder.Configuration["url"];
@@ -93,27 +93,17 @@ parser.OnNewData += (object _, string[] data) =>
     }
 };
 
-app.MapGet("/api/v1/start", (bool runOnce) =>
-{
-    if (runOnce) return RunOnce();
-    else return RunForever();
-});
+app.MapGet("/api/v1/start", (bool runOnce) => runOnce ? RunOnce() : RunForever());
 
-app.MapGet("/api/v1/state", () =>
-{
-    return Results.Ok(new { State = state.ToString() });
-});
+app.MapGet("/api/v1/state", () => Results.Ok(new { State = state.ToString() }));
 
-app.MapGet("/api/v1/stop", () =>
-{
-    return Stop();
-});
+app.MapGet("/api/v1/stop", Stop);
 
 app.Run();
 
 IResult RunOnce()
 {
-    if (state == ParserStates.isStopped || state == ParserStates.isSuspended)
+    if (state is ParserStates.isStopped or ParserStates.isSuspended)
     {
         state = ParserStates.isRunningOnce;
         RunOnceAsync();
