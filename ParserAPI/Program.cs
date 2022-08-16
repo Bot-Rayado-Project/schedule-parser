@@ -7,11 +7,16 @@ using Parser;
 
 # region Configuration
 
-ParserStates state = ParserStates.isStopped;
-
-string connectionString = Environment.GetEnvironmentVariable("ConnectionStrings:Db") ?? throw new Exception("Connection string not given.");
-
 var builder = WebApplication.CreateBuilder(args);
+
+// Get required environment variables
+string? connectionString = builder.Configuration["ConnectionStrings:Db"] ?? throw new Exception("DB Connection string not given.");
+string? logsFileName = builder.Configuration["logsFileName"] ?? "log";
+string? emailAdress = builder.Configuration["EADRESS"];
+string? emailPassword = builder.Configuration["EPASSWORD"];
+string? url = builder.Configuration["url"];
+string? downloadPath = builder.Configuration["downloadPath"];
+int? delay = builder.Configuration.GetValue<int>("delay");
 
 // Create logs folder
 if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
@@ -19,20 +24,17 @@ if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
 // Configure logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), "logs/logger.log"));
-builder.Logging.AddMail(Environment.GetEnvironmentVariable("EADRESS"), Environment.GetEnvironmentVariable("EPASSWORD"));
+builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), $"logs/{logsFileName}.log"));
+builder.Logging.AddMail(emailAdress, emailPassword);
 
 // Add services
-builder.Services.AddDbContext<ScheduleContext>(options =>
-{
-    options.UseNpgsql(connectionString);
-});
+builder.Services.AddSingleton<IParserWorker>(new ParserWorker(new ScheduleParser(), new ScheduleParserSettings(url, downloadPath)));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Version = "v2.3.2",
+        Version = "v2.3.4",
         Title = "Parser API",
         Description = "An ASP.NET Core Web API for managing schedule parsers' work",
         Contact = new OpenApiContact
@@ -42,18 +44,17 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-builder.Services.AddSingleton<IParserWorker>(new ParserWorker(new ScheduleParser(), new ScheduleParserSettings(
-    builder.Configuration["url"],
-    builder.Configuration["downloadPath"])));
+builder.Services.AddDbContext<ScheduleContext>(options =>
+{
+    options.UseNpgsql(connectionString);
+});
+
+#endregion
+
+// Parser state variable to control parserworker
+ParserStates state = ParserStates.isStopped;
 
 var app = builder.Build();
-
-// Create DB
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ScheduleContext>();
-    db.Database.EnsureCreated();
-}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -66,7 +67,12 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-#endregion
+// Create DB
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ScheduleContext>();
+    db.Database.EnsureCreated();
+}
 
 var parser = app.Services.GetRequiredService<IParserWorker>();
 
@@ -158,13 +164,13 @@ async Task RunForeverAsync()
         try
         {
             await parser.StartAsync();
-            app.Logger.LogInformation($"Sleeping for {Convert.ToInt32(app.Configuration["delay"])} seconds...");
-            await Task.Delay(Convert.ToInt32(app.Configuration["delay"]));
+            app.Logger.LogInformation($"Sleeping for {Convert.ToInt32(delay)} seconds...");
+            await Task.Delay(Convert.ToInt32(delay));
         }
         catch (System.Exception ex)
         {
-            app.Logger.LogCritical("An error occured in event loop: " + ex + $"\nSleeping for {Convert.ToInt32(app.Configuration["delay"])} seconds...");
-            await Task.Delay(Convert.ToInt32(app.Configuration["delay"]));
+            app.Logger.LogCritical("An error occured in event loop: " + ex + $"\nSleeping for {Convert.ToInt32(delay)} seconds...");
+            await Task.Delay(Convert.ToInt32(delay));
         }
     }
 }
