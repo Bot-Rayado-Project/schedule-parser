@@ -3,7 +3,7 @@ using Parser.Core.Models;
 
 namespace Parser;
 
-public interface IParser
+public interface IParser<T> where T: class
 {
-    string[] Parse(ExcelPackage package, TableInfo tableInfo);
+    T Parse(ExcelPackage package, TableInfo tableInfo);
 }

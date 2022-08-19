@@ -34,7 +34,7 @@ public class ParserWorker : IParserWorker
     #endregion
 
     private CancellationTokenSource s_cts;
-    public event Action<object, string[]> OnNewData;
+    public event Action<object, Dictionary<string, List<Dictionary<int, Dictionary<int, string?>?>>>> OnNewData;
 
     public ParserWorker(IParser parser)
     {

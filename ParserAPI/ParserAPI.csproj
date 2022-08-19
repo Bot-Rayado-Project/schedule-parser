@@ -21,5 +21,9 @@
     <ProjectReference Include="..\Parser\Parser.csproj" />
     <ProjectReference Include="..\ParserDAL\ParserDAL.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="streamsinfo.json" />
+  </ItemGroup>
   
 </Project>

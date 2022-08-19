@@ -76,11 +76,19 @@ using (var scope = app.Services.CreateScope())
 
 var parser = app.Services.GetRequiredService<IParserWorker>();
 
-parser.OnNewData += (object _, string[] data) =>
+parser.OnNewData += (object _, Dictionary<string, List<Dictionary<int, Dictionary<int, string?>?>>> data) =>
 {
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetService<ScheduleContext>();
+        foreach (var kvp in data)
+        {
+            string group = kvp.Key;
+            foreach (var days in kvp.Value)
+            {
+                
+            }
+        }
         // ЛОГИКА ЗАПИСИ В БД ТУТ!!! МОЖНО ВСТАВИТЬ ДЕЛЕГАТ!!!!
         db.SharedSchedules.Add(new SharedSchedule()
         {
@@ -141,7 +149,7 @@ async Task RunOnceAsync()
         await parser.StartAsync();
         state = ParserStates.isStopped;
     }
-    catch (System.Exception ex)
+    catch (Exception ex)
     {
         app.Logger.LogCritical("An error occured in event loop: " + ex);
     }
@@ -157,7 +165,7 @@ async Task RunForeverAsync()
             app.Logger.LogInformation($"Sleeping for {Convert.ToInt32(delay)} seconds...");
             await Task.Delay(Convert.ToInt32(delay));
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             app.Logger.LogCritical("An error occured in event loop: " + ex + $"\nSleeping for {Convert.ToInt32(delay)} seconds...");
             await Task.Delay(Convert.ToInt32(delay));
