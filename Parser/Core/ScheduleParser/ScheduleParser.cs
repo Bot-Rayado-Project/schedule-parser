@@ -4,15 +4,15 @@ using Newtonsoft.Json;
 
 namespace Parser.Core.ScheduleParser;
 
-public class ScheduleParser : IParser
+public class ScheduleParser : IParser<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>>>
 {
-    private Dictionary<string, Dictionary<string,Dictionary<string, Dictionary<string,Dictionary<string,string>>>>>? jsonFile;
-    
+    private Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>>? jsonFile;
+
     public ScheduleParser()
     {
-        jsonFile = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string,Dictionary<string, Dictionary<string,Dictionary<string,string>>>>>>(File.ReadAllText("streamsinfo.json"));
+        jsonFile = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>>>(File.ReadAllText("streamsinfo.json"));
     }
-    
+
     public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>> Parse(ExcelPackage package, TableInfo tableInfo)
     {
         Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>> result = new();
@@ -29,9 +29,9 @@ public class ScheduleParser : IParser
             {3, null},
             {4, null},
             {5, null}
-        };;
+        }; ;
         Dictionary<int, string?> oddPairs = new() {
-            {1, null}, 
+            {1, null},
             {2, null},
             {3, null},
             {4, null},
@@ -44,7 +44,7 @@ public class ScheduleParser : IParser
             {4, null},
             {5, null}
         };
-    
+
         var listOfWorksheets = jsonFile[Convert.ToString(tableInfo.Grade)][tableInfo.Faculty][tableInfo.Stream];
 
         foreach (var worksheet in listOfWorksheets)
@@ -67,18 +67,17 @@ public class ScheduleParser : IParser
                         Console.WriteLine(cellData);
                         if (counter % 2 != 0)
                         {
-                            oddPairs[Convert.ToInt32(Math.Ceiling((double)counter/2))] = cellData;
+                            oddPairs[Convert.ToInt32(Math.Ceiling((double)counter / 2))] = cellData;
                         }
                         else
                         {
-                            evenPairs[Convert.ToInt32(Math.Ceiling((double)counter/2))] = cellData;
+                            evenPairs[Convert.ToInt32(Math.Ceiling((double)counter / 2))] = cellData;
                         }
                     }
                     oddDays[i] = oddPairs;
                     evenDays[i] = evenPairs;
                     startRow += 11;
                 }
-                result.Add(group.Key, new List<Dictionary<int, Dictionary<int, string?>?>>() {oddDays, evenDays});
             }
         }
 

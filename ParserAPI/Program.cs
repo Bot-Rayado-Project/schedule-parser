@@ -28,7 +28,10 @@ builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), $"logs/{lo
 builder.Logging.AddMail(emailAdress, emailPassword);
 
 // Add services
-builder.Services.AddSingleton<IParserWorker>(new ParserWorker(new ScheduleParser(), new ScheduleParserSettings(url, downloadPath)));
+builder.Services.AddSingleton(new ParserWorker<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>>>(
+                            new ScheduleParser(),
+                            new ScheduleParserSettings(url, downloadPath)
+                        ));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -74,9 +77,9 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-var parser = app.Services.GetRequiredService<IParserWorker>();
+var parser = app.Services.GetRequiredService<ParserWorker<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>>>>();
 
-parser.OnNewData += (object _, Dictionary<string, List<Dictionary<int, Dictionary<int, string?>?>>> data) =>
+parser.OnNewData += (object _, Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>> data) =>
 {
     using (var scope = app.Services.CreateScope())
     {
@@ -86,7 +89,7 @@ parser.OnNewData += (object _, Dictionary<string, List<Dictionary<int, Dictionar
             string group = kvp.Key;
             foreach (var days in kvp.Value)
             {
-                
+
             }
         }
         // ЛОГИКА ЗАПИСИ В БД ТУТ!!! МОЖНО ВСТАВИТЬ ДЕЛЕГАТ!!!!
