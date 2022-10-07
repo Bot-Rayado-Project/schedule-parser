@@ -4,83 +4,91 @@ using Newtonsoft.Json;
 
 namespace Parser.Core.ScheduleParser;
 
-public class ScheduleParser : IParser<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>>>
+public class ScheduleParser : IParser<string[]>
 {
-    private Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>>? jsonFile;
+    private const int StartRow = 17;
+    private const int StartTimeCol = 3;
+    private const int StartAudCol = 4;
+    private const int StartTypeCol = 5;
+    private const int StartLecturerCol = 6;
+    private const int StartPairCol = 7;
 
-    public ScheduleParser()
+    public string[] Parse(ExcelPackage package, TableInfo tableInfo)
     {
-        jsonFile = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>>>(File.ReadAllText("streamsinfo.json"));
-    }
+        List<string> result = new();
 
-    public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>> Parse(ExcelPackage package, TableInfo tableInfo)
-    {
-        Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>> result = new();
-        Dictionary<int, Dictionary<int, string?>?> evenDays = new() {
-            {1, null},
-            {2, null},
-            {3, null},
-            {4, null},
-            {5, null}
-        };
-        Dictionary<int, Dictionary<int, string?>?> oddDays = new(){
-            {1, null},
-            {2, null},
-            {3, null},
-            {4, null},
-            {5, null}
-        }; ;
-        Dictionary<int, string?> oddPairs = new() {
-            {1, null},
-            {2, null},
-            {3, null},
-            {4, null},
-            {5, null}
-        };
-        Dictionary<int, string?> evenPairs = new() {
-            {1, null},
-            {2, null},
-            {3, null},
-            {4, null},
-            {5, null}
-        };
+        int wsCount = package.Workbook.Worksheets.Count;
 
-        var listOfWorksheets = jsonFile[Convert.ToString(tableInfo.Grade)][tableInfo.Faculty][tableInfo.Stream];
-
-        foreach (var worksheet in listOfWorksheets)
+        for (int i = 0; i < wsCount; i++)
         {
             // Set active worksheet
-            var ws = package.Workbook.Worksheets[Convert.ToInt32(worksheet.Key) - 1];
-            var listOfGroups = worksheet.Value;
-            foreach (var group in listOfGroups)
+            var ws = package.Workbook.Worksheets[i];
+
+            int startRow = StartRow;
+
+            Dictionary<DayOfWeek, Dictionary<int, (string?, string?, string?, string?, string?)>> daysInfo = new();
+
+            foreach (DayOfWeek dow in Enum.GetValues(typeof(DayOfWeek)))
             {
-                int counter = 0;
-                int startRow = Convert.ToInt32(new String(group.Value.Where(Char.IsDigit).ToArray()));
-                string col = new String(group.Value.Where(Char.IsLetter).ToArray());
-                for (int i = 1; i < 5; i++)
+                if (dow == 0)
+                    continue;
+                System.Console.WriteLine(((DayOfWeek)dow).ToString());
+
+                Dictionary<int, (string?, string?, string?, string?, string?)> pairs = new();
+                int pairCounter = 1;
+
+                for (int row = startRow; row < startRow + 5; row++, pairCounter++)
                 {
-                    for (int row = startRow; row < startRow + 10; row++)
-                    {
-                        counter++;
-                        string cell = col + Convert.ToString(row);
-                        var cellData = ws.Cells[cell].Text;
-                        Console.WriteLine(cellData);
-                        if (counter % 2 != 0)
-                        {
-                            oddPairs[Convert.ToInt32(Math.Ceiling((double)counter / 2))] = cellData;
-                        }
-                        else
-                        {
-                            evenPairs[Convert.ToInt32(Math.Ceiling((double)counter / 2))] = cellData;
-                        }
-                    }
-                    oddDays[i] = oddPairs;
-                    evenDays[i] = evenPairs;
-                    startRow += 11;
+                    string? time = ws.Cells[row, StartTimeCol].Value?.ToString();
+                    string? auditory = ws.Cells[row, StartAudCol].Value?.ToString();
+                    string? type = ws.Cells[row, StartTypeCol].Value?.ToString();
+                    string? lecturer = ws.Cells[row, StartLecturerCol].Value?.ToString();
+                    string? pair = ws.Cells[row, StartPairCol].Value?.ToString();
+
+                    pairs.Add(pairCounter, (time, auditory, type, lecturer, pair));
                 }
+                daysInfo.Add((DayOfWeek)dow, pairs);
+                startRow += 6;
+            }
+            foreach (var day in daysInfo)
+            {
+                string schedule = @$"
+⸻⸻⸻⸻⸻
+Группа: {ws.Name}
+День недели: {((DayOfWeek)day.Key).ToString()}
+Неделя: Нечетная
+⸻⸻⸻⸻⸻
+1_PAIR
+⸻⸻⸻⸻⸻
+2_PAIR
+⸻⸻⸻⸻⸻
+3_PAIR
+⸻⸻⸻⸻⸻
+4_PAIR
+⸻⸻⸻⸻⸻
+5_PAIR
+⸻⸻⸻⸻⸻
+                                     ";
+                foreach (var pair in day.Value)
+                {
+                    string composedPair;
+
+                    int pairNumber = pair.Key;
+                    (string?, string?, string?, string?, string?) pairInfo = pair.Value;
+                    var _pair = pairInfo.Item5 ?? "";
+                    composedPair = _pair == "" ? "Пары нет" : @$"
+{pairInfo.Item1}
+{pairInfo.Item5}
+Преподаватель: {pairInfo.Item4}
+Аудитория: {pairInfo.Item2}
+Тип пары: {pairInfo.Item3}
+                                                                          ";
+                    schedule = schedule.Replace(Convert.ToString(pairNumber) + "_PAIR", composedPair);
+                }
+                result.Add(schedule);
+                System.Console.WriteLine(schedule);
             }
         }
-
-        return result;
+        return result.ToArray();
     }
 }

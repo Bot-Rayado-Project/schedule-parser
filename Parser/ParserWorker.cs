@@ -25,7 +25,7 @@ public class ParserWorker<T> where T : class
             settings = value;
             htmlLoader = new HtmlLoader(value);
             htmlParser = new HtmlParser(value);
-            linksParser = new LinksParser();
+            linksParser = new LinksParser(value);
             tablesDownloader = new TablesDownloader(value);
             tableLoader = new TableLoader();
         }
@@ -86,6 +86,10 @@ public class ParserWorker<T> where T : class
         }
 
         var linksInfo = linksParser.Parse(links);
+        foreach (var item in linksInfo)
+        {
+            System.Console.WriteLine(item.Key + " " + item.Value.Stream + " " + item.Value.GroupFrom + "-" + item.Value.GroupTo);
+        }
 
         var tablesPaths = await tablesDownloader.DownloadTablesAsync(linksInfo, token);
 

@@ -31,7 +31,7 @@ builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), $"logs/{lo
 builder.Logging.AddMail(emailAdress, emailPassword);
 
 // Add services
-builder.Services.AddSingleton(new ParserWorker<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>>>(
+builder.Services.AddSingleton(new ParserWorker<string[]>(
                               new ScheduleParser(),
                               new ScheduleParserSettings(url, downloadPath, streamsMatchesFaculties)
                             ));
@@ -80,30 +80,22 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-var parser = app.Services.GetRequiredService<ParserWorker<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>>>>();
+var parser = app.Services.GetRequiredService<ParserWorker<string[]>>();
 
-parser.OnNewData += (object _, Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>> data) =>
+parser.OnNewData += (object _, string[] data) =>
 {
     using (var scope = app.Services.CreateScope())
     {
-        var db = scope.ServiceProvider.GetService<ScheduleContext>();
-        foreach (var kvp in data)
-        {
-            string group = kvp.Key;
-            foreach (var days in kvp.Value)
-            {
-
-            }
-        }
-        // ЛОГИКА ЗАПИСИ В БД ТУТ!!! МОЖНО ВСТАВИТЬ ДЕЛЕГАТ!!!!
-        db.SharedSchedules.Add(new SharedSchedule()
-        {
-            stream_group = "бвт2103",
-            day = "понедельник",
-            parity = "четная",
-            schedule = "CUM!!!",
-        });
-        db.SaveChanges();
+        // var db = scope.ServiceProvider.GetService<ScheduleContext>();
+        // // ЛОГИКА ЗАПИСИ В БД ТУТ!!! МОЖНО ВСТАВИТЬ ДЕЛЕГАТ!!!!
+        // db.SharedSchedules.Add(new SharedSchedule()
+        // {
+        //     stream_group = "бвт2103",
+        //     day = "понедельник",
+        //     parity = "четная",
+        //     schedule = "CUM!!!",
+        // });
+        // db.SaveChanges();
     }
 };
 
