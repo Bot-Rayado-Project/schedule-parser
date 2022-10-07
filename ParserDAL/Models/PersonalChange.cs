@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ParserDAL.Models;
 
+[Table("personal_changes")]
 public class PersonalChange
 {
     [Required]

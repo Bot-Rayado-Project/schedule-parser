@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ParserDAL.Models;
-
+[Table("headman_changes")]
 public class HeadmanChange
 {
     [Required]

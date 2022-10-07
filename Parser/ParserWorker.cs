@@ -80,16 +80,8 @@ public class ParserWorker<T> where T : class
         htmlDocument.LoadHtml(source);
 
         var links = htmlParser.Parse(htmlDocument);
-        foreach (var item in links)
-        {
-            System.Console.WriteLine(item);
-        }
 
         var linksInfo = linksParser.Parse(links);
-        foreach (var item in linksInfo)
-        {
-            System.Console.WriteLine(item.Key + " " + item.Value.Stream + " " + item.Value.GroupFrom + "-" + item.Value.GroupTo);
-        }
 
         var tablesPaths = await tablesDownloader.DownloadTablesAsync(linksInfo, token);
 
