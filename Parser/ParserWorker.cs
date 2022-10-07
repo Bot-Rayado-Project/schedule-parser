@@ -3,11 +3,11 @@ using HtmlAgilityPack;
 
 namespace Parser;
 
-public class ParserWorker : IParserWorker
+public class ParserWorker<T> where T : class
 {
     #region Properties
 
-    public IParser Parser { get; set; }
+    public IParser<T> Parser { get; set; }
     private HtmlLoader htmlLoader;
     private HtmlParser htmlParser;
     private LinksParser linksParser;
@@ -25,7 +25,7 @@ public class ParserWorker : IParserWorker
             settings = value;
             htmlLoader = new HtmlLoader(value);
             htmlParser = new HtmlParser(value);
-            linksParser = new LinksParser();
+            linksParser = new LinksParser(value);
             tablesDownloader = new TablesDownloader(value);
             tableLoader = new TableLoader();
         }
@@ -34,15 +34,15 @@ public class ParserWorker : IParserWorker
     #endregion
 
     private CancellationTokenSource s_cts;
-    public event Action<object, Dictionary<string, List<Dictionary<int, Dictionary<int, string?>?>>>> OnNewData;
+    public event Action<object, T> OnNewData;
 
-    public ParserWorker(IParser parser)
+    public ParserWorker(IParser<T> parser)
     {
         s_cts = new CancellationTokenSource();
         Parser = parser;
     }
 
-    public ParserWorker(IParser parser, IParserSettings settings) : this(parser)
+    public ParserWorker(IParser<T> parser, IParserSettings settings) : this(parser)
     {
         Settings = settings;
     }

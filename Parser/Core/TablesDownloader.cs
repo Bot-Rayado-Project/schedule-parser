@@ -21,7 +21,7 @@ internal class TablesDownloader
 
         foreach (KeyValuePair<string, TableInfo> kvp in linksInfo)
         {
-            string filePath = $"{downloadPath}/{kvp.Value.Grade}_{kvp.Value.Faculty}_{kvp.Value.Stream}.xlsx";
+            string filePath = $"{downloadPath}/{kvp.Value.Grade}_{kvp.Value.Faculty}_{kvp.Value.Stream}_{kvp.Value.GroupFrom}_{kvp.Value.GroupTo}.xlsx";
             if (File.Exists(filePath)) File.Delete(filePath);
             using (var stream = await httpClient.GetStreamAsync(kvp.Key))
             {

@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ParserDAL.Models;
 
+[Table("headman_schedules")]
 public class HeadmanSchedule
 {
     [Required]

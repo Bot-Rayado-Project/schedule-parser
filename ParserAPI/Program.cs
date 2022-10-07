@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using ParserDAL.DataAccess;
 using ParserDAL.Models;
 using Parser.Core.ScheduleParser;
+using Parser.Core.Models;
 using Parser;
+using Newtonsoft.Json;
 
 # region Configuration
 
@@ -17,6 +19,8 @@ string? emailPassword = builder.Configuration["EPASSWORD"];
 string? url = builder.Configuration["url"];
 string? downloadPath = builder.Configuration["downloadPath"];
 int? delay = builder.Configuration.GetValue<int>("delay");
+string projectJsonContent = "{\n" + GetSectionContent(builder.Configuration.GetSection("streamsMatchesFaculties")) + "}";
+var streamsMatchesFaculties = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>(projectJsonContent);
 
 // Create logs folder
 if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
@@ -28,13 +32,16 @@ builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), $"logs/{lo
 builder.Logging.AddMail(emailAdress, emailPassword);
 
 // Add services
-builder.Services.AddSingleton<IParserWorker>(new ParserWorker(new ScheduleParser(), new ScheduleParserSettings(url, downloadPath)));
+builder.Services.AddSingleton(new ParserWorker<Dictionary<string, Dictionary<int, Dictionary<DayOfWeekRussian, string>>>>(
+                              new ScheduleParser(),
+                              new ScheduleParserSettings(url, downloadPath, streamsMatchesFaculties)
+                            ));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Version = "v2.3.4",
+        Version = "v2.7.9",
         Title = "Parser API",
         Description = "An ASP.NET Core Web API for managing schedule parsers' work",
         Contact = new OpenApiContact
@@ -47,6 +54,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<ScheduleContext>(options =>
 {
     options.UseNpgsql(connectionString);
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 
 #endregion
@@ -74,29 +82,41 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-var parser = app.Services.GetRequiredService<IParserWorker>();
+var parser = app.Services.GetRequiredService<ParserWorker<Dictionary<string, Dictionary<int, Dictionary<DayOfWeekRussian, string>>>>>();
 
-parser.OnNewData += (object _, Dictionary<string, List<Dictionary<int, Dictionary<int, string?>?>>> data) =>
+parser.OnNewData += (object _, Dictionary<string, Dictionary<int, Dictionary<DayOfWeekRussian, string>>> data) =>
 {
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetService<ScheduleContext>();
-        foreach (var kvp in data)
+        foreach (var _data in data)
         {
-            string group = kvp.Key;
-            foreach (var days in kvp.Value)
+            string _group = _data.Key.ToLower();
+            foreach (var parity in _data.Value)
             {
-                
+                string _parity = parity.Key == 1 ? "нечетная" : "четная";
+                foreach (var day in parity.Value)
+                {
+                    string _day = day.Key.ToString();
+                    string schedule = day.Value;
+                    var selectedSchedule = (from s in db.SharedSchedules
+                                            where (s.stream_group.Equals(_group) && s.parity.Equals(_parity) && s.day.Equals(_day))
+                                            select s).FirstOrDefault();
+                    if (selectedSchedule != null)
+                    {
+                        selectedSchedule.schedule = schedule;
+                    }
+                    else
+                        db.SharedSchedules.Add(new SharedSchedule()
+                        {
+                            stream_group = _group,
+                            day = _day,
+                            parity = _parity,
+                            schedule = schedule
+                        });
+                }
             }
         }
-        // ЛОГИКА ЗАПИСИ В БД ТУТ!!! МОЖНО ВСТАВИТЬ ДЕЛЕГАТ!!!!
-        db.SharedSchedules.Add(new SharedSchedule()
-        {
-            stream_group = "бвт2103",
-            day = "понедельник",
-            parity = "четная",
-            schedule = "CUM!!!",
-        });
         db.SaveChanges();
     }
 };
@@ -171,4 +191,23 @@ async Task RunForeverAsync()
             await Task.Delay(Convert.ToInt32(delay));
         }
     }
+}
+
+string GetSectionContent(IConfiguration configSection)
+{
+    string sectionContent = "";
+    foreach (var section in configSection.GetChildren())
+    {
+        sectionContent += "\"" + section.Key + "\":";
+        if (section.Value == null)
+        {
+            string subSectionContent = GetSectionContent(section);
+            sectionContent += "{\n" + subSectionContent + "},\n";
+        }
+        else
+        {
+            sectionContent += "\"" + section.Value + "\",\n";
+        }
+    }
+    return sectionContent;
 }
