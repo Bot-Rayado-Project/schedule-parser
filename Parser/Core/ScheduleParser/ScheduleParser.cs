@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace Parser.Core.ScheduleParser;
 
-public class ScheduleParser : IParser<string[]>
+public class ScheduleParser : IParser<Dictionary<string, Dictionary<int, Dictionary<DayOfWeek, string>>>>
 {
     private const int StartRow = 17;
     private const int StartTimeCol = 3;
@@ -13,46 +13,50 @@ public class ScheduleParser : IParser<string[]>
     private const int StartLecturerCol = 6;
     private const int StartPairCol = 7;
 
-    public string[] Parse(ExcelPackage package, TableInfo tableInfo)
+    public Dictionary<string, Dictionary<int, Dictionary<DayOfWeek, string>>> Parse(ExcelPackage package, TableInfo tableInfo)
     {
-        List<string> result = new();
+        Dictionary<string, Dictionary<int, Dictionary<DayOfWeek, string>>> result = new();
 
         int wsCount = package.Workbook.Worksheets.Count;
 
         for (int i = 0; i < wsCount; i++)
         {
-            // Set active worksheet
             var ws = package.Workbook.Worksheets[i];
 
-            int startRow = StartRow;
+            Dictionary<int, Dictionary<DayOfWeek, string>> weeksInfo = new();
 
-            Dictionary<DayOfWeek, Dictionary<int, (string?, string?, string?, string?, string?)>> daysInfo = new();
-
-            foreach (DayOfWeek dow in Enum.GetValues(typeof(DayOfWeek)))
+            for (int j = 1; j < 2; j++)
             {
-                if (dow == 0)
-                    continue;
-                System.Console.WriteLine(((DayOfWeek)dow).ToString());
+                int startRow = StartRow;
 
-                Dictionary<int, (string?, string?, string?, string?, string?)> pairs = new();
-                int pairCounter = 1;
+                Dictionary<DayOfWeek, Dictionary<int, (string?, string?, string?, string?, string?)>> daysInfo = new();
+                Dictionary<DayOfWeek, string> daysCompiled = new();
 
-                for (int row = startRow; row < startRow + 5; row++, pairCounter++)
+                foreach (DayOfWeek dow in Enum.GetValues(typeof(DayOfWeek)))
                 {
-                    string? time = ws.Cells[row, StartTimeCol].Value?.ToString();
-                    string? auditory = ws.Cells[row, StartAudCol].Value?.ToString();
-                    string? type = ws.Cells[row, StartTypeCol].Value?.ToString();
-                    string? lecturer = ws.Cells[row, StartLecturerCol].Value?.ToString();
-                    string? pair = ws.Cells[row, StartPairCol].Value?.ToString();
+                    if (dow == 0)
+                        continue;
+                    System.Console.WriteLine(((DayOfWeek)dow).ToString());
 
-                    pairs.Add(pairCounter, (time, auditory, type, lecturer, pair));
+                    Dictionary<int, (string?, string?, string?, string?, string?)> pairs = new();
+                    int pairCounter = 1;
+
+                    for (int row = startRow; row < startRow + 5; row++, pairCounter++)
+                    {
+                        string? time = ws.Cells[row, StartTimeCol].Value?.ToString();
+                        string? auditory = ws.Cells[row, StartAudCol].Value?.ToString();
+                        string? type = ws.Cells[row, StartTypeCol].Value?.ToString();
+                        string? lecturer = ws.Cells[row, StartLecturerCol].Value?.ToString();
+                        string? pair = ws.Cells[row, StartPairCol].Value?.ToString();
+
+                        pairs.Add(pairCounter, (time, auditory, type, lecturer, pair));
+                    }
+                    daysInfo.Add((DayOfWeek)dow, pairs);
+                    startRow += 6;
                 }
-                daysInfo.Add((DayOfWeek)dow, pairs);
-                startRow += 6;
-            }
-            foreach (var day in daysInfo)
-            {
-                string schedule = @$"
+                foreach (var day in daysInfo)
+                {
+                    string schedule = @$"
 ⸻⸻⸻⸻⸻
 Группа: {ws.Name}
 День недели: {((DayOfWeek)day.Key).ToString()}
@@ -69,26 +73,29 @@ public class ScheduleParser : IParser<string[]>
 5_PAIR
 ⸻⸻⸻⸻⸻
                                      ";
-                foreach (var pair in day.Value)
-                {
-                    string composedPair;
+                    foreach (var pair in day.Value)
+                    {
+                        string composedPair;
 
-                    int pairNumber = pair.Key;
-                    (string?, string?, string?, string?, string?) pairInfo = pair.Value;
-                    var _pair = pairInfo.Item5 ?? "";
-                    composedPair = _pair == "" ? "Пары нет" : @$"
+                        int pairNumber = pair.Key;
+                        (string?, string?, string?, string?, string?) pairInfo = pair.Value;
+                        var _pair = pairInfo.Item5 ?? "";
+                        composedPair = _pair == "" ? "Пары нет" : @$"
 {pairInfo.Item1}
 {pairInfo.Item5}
 Преподаватель: {pairInfo.Item4}
 Аудитория: {pairInfo.Item2}
 Тип пары: {pairInfo.Item3}
                                                                           ";
-                    schedule = schedule.Replace(Convert.ToString(pairNumber) + "_PAIR", composedPair);
+                        schedule = schedule.Replace(Convert.ToString(pairNumber) + "_PAIR", composedPair);
+                    }
+                    daysCompiled.Add((DayOfWeek)day.Key, schedule);
+                    System.Console.WriteLine(schedule);
                 }
-                result.Add(schedule);
-                System.Console.WriteLine(schedule);
+                weeksInfo.Add(j, daysCompiled);
             }
+            result.Add(ws.Name, weeksInfo);
         }
-        return result.ToArray();
+        return result;
     }
 }

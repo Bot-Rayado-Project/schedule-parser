@@ -31,7 +31,7 @@ builder.Logging.AddFile(Path.Combine(Directory.GetCurrentDirectory(), $"logs/{lo
 builder.Logging.AddMail(emailAdress, emailPassword);
 
 // Add services
-builder.Services.AddSingleton(new ParserWorker<string[]>(
+builder.Services.AddSingleton(new ParserWorker<Dictionary<string, Dictionary<int, Dictionary<DayOfWeek, string>>>>(
                               new ScheduleParser(),
                               new ScheduleParserSettings(url, downloadPath, streamsMatchesFaculties)
                             ));
@@ -80,9 +80,9 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-var parser = app.Services.GetRequiredService<ParserWorker<string[]>>();
+var parser = app.Services.GetRequiredService<ParserWorker<Dictionary<string, Dictionary<int, Dictionary<DayOfWeek, string>>>>>();
 
-parser.OnNewData += (object _, string[] data) =>
+parser.OnNewData += (object _, Dictionary<string, Dictionary<int, Dictionary<DayOfWeek, string>>> data) =>
 {
     using (var scope = app.Services.CreateScope())
     {
