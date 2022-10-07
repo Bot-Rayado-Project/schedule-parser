@@ -6,10 +6,18 @@ namespace Parser.Core;
 class LinksParser
 {
     readonly string[] faculties = new string[] { "it", "siss", "kiib", "rit", "tseimk" };
+    readonly Dictionary<string, string[]> streamMatchesFaculties = new()
+    {
+        {"it", new string[] {"bfi", "bvt", "bst", "bei"} },
+        {"kiib", new string[] {"bap", "bpm", "but", "zrs", "bib"} },
+        {"rit", new string[] {"brt", "bik"} },
+        {"tseimk", new string[] {"bee", "ber", "bbi"} },
+        {"siss", new string[] {"bin"} }
+    };
     readonly Regex gradeRx = new Regex(@"\d\D*kurs",
           RegexOptions.Compiled | RegexOptions.IgnoreCase);
     readonly Regex streamRx = new Regex(@"\d+\.\d+\.\d+",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+          RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public Dictionary<string, TableInfo> Parse(string[] links)
     {

@@ -7,11 +7,13 @@ class HtmlParser
 {
     readonly string url;
     readonly Uri baseUri;
+    readonly Dictionary<string, Dictionary<string, int>> streamsMatchesFaculties;
 
     public HtmlParser(IParserSettings settings)
     {
         url = settings.Url;
         baseUri = new Uri(url);
+        streamsMatchesFaculties = settings.StreamsMatchesFaculties;
     }
     public string[] Parse(HtmlDocument htmlDocument)
     {
@@ -24,15 +26,13 @@ class HtmlParser
             string href = link.Attributes["href"].Value;
             string _href = href.ToLower();
 
-            if (!_href.Contains("ekzamenov")
-                && !_href.Contains("mag")
-                && _href.Contains(".xlsx")
-                && !_href.Contains("tszopb")
-                && !_href.Contains("tszopm")
-                && Regex.Match(_href, @"2\D*kurs").Success
-                && Regex.Match(_href, @"\d+\.\d+\.\d+").Success)
+            foreach (var faculty in streamsMatchesFaculties.Values)
             {
-                list.Add(new Uri(baseUri, href).AbsoluteUri);
+                foreach (var stream in faculty.Keys)
+                {
+                    if (_href.Contains(stream + "21"))
+                        list.Add(new Uri(baseUri, href).AbsoluteUri);
+                }
             }
         }
 

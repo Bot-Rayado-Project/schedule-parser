@@ -4,6 +4,7 @@ using ParserDAL.DataAccess;
 using ParserDAL.Models;
 using Parser.Core.ScheduleParser;
 using Parser;
+using Newtonsoft.Json;
 
 # region Configuration
 
@@ -17,6 +18,8 @@ string? emailPassword = builder.Configuration["EPASSWORD"];
 string? url = builder.Configuration["url"];
 string? downloadPath = builder.Configuration["downloadPath"];
 int? delay = builder.Configuration.GetValue<int>("delay");
+string projectJsonContent = "{\n" + GetSectionContent(builder.Configuration.GetSection("streamsMatchesFaculties")) + "}";
+var streamsMatchesFaculties = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>(projectJsonContent);
 
 // Create logs folder
 if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
@@ -29,9 +32,9 @@ builder.Logging.AddMail(emailAdress, emailPassword);
 
 // Add services
 builder.Services.AddSingleton(new ParserWorker<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<int, string?>>>>>(
-                            new ScheduleParser(),
-                            new ScheduleParserSettings(url, downloadPath)
-                        ));
+                              new ScheduleParser(),
+                              new ScheduleParserSettings(url, downloadPath, streamsMatchesFaculties)
+                            ));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -174,4 +177,23 @@ async Task RunForeverAsync()
             await Task.Delay(Convert.ToInt32(delay));
         }
     }
+}
+
+string GetSectionContent(IConfiguration configSection)
+{
+    string sectionContent = "";
+    foreach (var section in configSection.GetChildren())
+    {
+        sectionContent += "\"" + section.Key + "\":";
+        if (section.Value == null)
+        {
+            string subSectionContent = GetSectionContent(section);
+            sectionContent += "{\n" + subSectionContent + "},\n";
+        }
+        else
+        {
+            sectionContent += "\"" + section.Value + "\",\n";
+        }
+    }
+    return sectionContent;
 }

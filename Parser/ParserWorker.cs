@@ -80,6 +80,10 @@ public class ParserWorker<T> where T : class
         htmlDocument.LoadHtml(source);
 
         var links = htmlParser.Parse(htmlDocument);
+        foreach (var item in links)
+        {
+            System.Console.WriteLine(item);
+        }
 
         var linksInfo = linksParser.Parse(links);
 
