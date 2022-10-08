@@ -185,12 +185,12 @@ async Task RunForeverAsync()
         {
             await parser.StartAsync();
             app.Logger.LogInformation($"Sleeping for {Convert.ToInt32(delay)} seconds...");
-            await Task.Delay(Convert.ToInt32(delay));
+            await Task.Delay(Convert.ToInt32(delay) * 1000);
         }
         catch (Exception ex)
         {
             app.Logger.LogCritical("An error occured in event loop: " + ex + $"\nSleeping for {Convert.ToInt32(delay)} seconds...");
-            await Task.Delay(Convert.ToInt32(delay));
+            await Task.Delay(Convert.ToInt32(delay) * 1000);
         }
     }
 }
