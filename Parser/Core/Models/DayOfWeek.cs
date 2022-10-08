@@ -2,11 +2,11 @@ namespace Parser.Core.Models;
 
 public enum DayOfWeekRussian
 {
-    Voskresenie,
-    Ponedelnik,
-    Vtornik,
-    Sreda,
-    Chetverg,
-    Pjatnitsa,
-    Subbota
+    voskresenie,
+    ponedelnik,
+    vtornik,
+    sreda,
+    chetverg,
+    pjatnitsa,
+    subbota
 }
