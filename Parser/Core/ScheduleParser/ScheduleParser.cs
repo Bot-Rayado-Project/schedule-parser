@@ -55,17 +55,12 @@ public class ScheduleParser : IParser<Dictionary<string, Dictionary<int, Diction
                         pairs.Add(pairCounter, (time, auditory, type, lecturer, pair));
                     }
                     daysInfo.Add((DayOfWeekRussian)dow, pairs);
-                    startRow += 6;
+                    startRow += 5;
                 }
                 foreach (var day in daysInfo)
                 {
                     string parity = j == 1 ? "Нечетная" : "Четная";
                     string schedule = @$"
-⸻⸻⸻⸻⸻
-Группа: {ws.Name}
-День недели: {((DayOfWeekRussian)day.Key).ToString()}
-Неделя: {parity}
-⸻⸻⸻⸻⸻
 1_PAIR
 ⸻⸻⸻⸻⸻
 2_PAIR
@@ -87,9 +82,9 @@ public class ScheduleParser : IParser<Dictionary<string, Dictionary<int, Diction
                         composedPair = _pair == "" ? "Пары нет" : @$"
 {pairInfo.Item1}
 {pairInfo.Item5}
-Преподаватель: {pairInfo.Item4}
-Аудитория: {pairInfo.Item2}
-Тип пары: {pairInfo.Item3}
+Преподаватель: {pairInfo.Item4.Replace("\n", "")}
+Аудитория: {pairInfo.Item2.Replace("\n", "")}
+Тип пары: {pairInfo.Item3.Replace("\n", "")}
                                                                           ";
                         schedule = schedule.Replace(Convert.ToString(pairNumber) + "_PAIR", composedPair);
                     }
