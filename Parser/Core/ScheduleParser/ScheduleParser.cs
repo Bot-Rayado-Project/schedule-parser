@@ -82,9 +82,9 @@ public class ScheduleParser : IParser<Dictionary<string, Dictionary<int, Diction
                         composedPair = _pair == "" ? "Пары нет" : @$"
 {pairInfo.Item1}
 {pairInfo.Item5}
-Преподаватель: {pairInfo.Item4.Replace("\n", "")}
-Аудитория: {pairInfo.Item2.Replace("\n", "")}
-Тип пары: {pairInfo.Item3.Replace("\n", "")}
+Преподаватель: {pairInfo.Item4}
+Аудитория: {pairInfo.Item2}
+Тип пары: {pairInfo.Item3}
                                                                           ";
                         schedule = schedule.Replace(Convert.ToString(pairNumber) + "_PAIR", composedPair);
                     }
