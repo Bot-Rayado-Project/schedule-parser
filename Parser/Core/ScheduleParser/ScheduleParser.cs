@@ -60,18 +60,7 @@ public class ScheduleParser : IParser<Dictionary<string, Dictionary<int, Diction
                 foreach (var day in daysInfo)
                 {
                     string parity = j == 1 ? "Нечетная" : "Четная";
-                    string schedule = @$"
-1_PAIR
-⸻⸻⸻⸻⸻
-2_PAIR
-⸻⸻⸻⸻⸻
-3_PAIR
-⸻⸻⸻⸻⸻
-4_PAIR
-⸻⸻⸻⸻⸻
-5_PAIR
-⸻⸻⸻⸻⸻
-                                     ";
+                    string schedule = "1_PAIR\n⸻⸻⸻⸻⸻\n2_PAIR\n⸻⸻⸻⸻⸻\n3_PAIR\n⸻⸻⸻⸻⸻\n4_PAIR\n⸻⸻⸻⸻⸻\n5_PAIR\n⸻⸻⸻⸻⸻";
                     foreach (var pair in day.Value)
                     {
                         string composedPair;
@@ -79,13 +68,7 @@ public class ScheduleParser : IParser<Dictionary<string, Dictionary<int, Diction
                         int pairNumber = pair.Key;
                         (string?, string?, string?, string?, string?) pairInfo = pair.Value;
                         var _pair = pairInfo.Item5 ?? "";
-                        composedPair = _pair == "" ? "Пары нет" : @$"
-{pairInfo.Item1}
-{pairInfo.Item5}
-Преподаватель: {pairInfo.Item4}
-Аудитория: {pairInfo.Item2}
-Тип пары: {pairInfo.Item3}
-                                                                          ";
+                        composedPair = _pair == "" ? "Пары нет" : $"{pairInfo.Item1}\n{pairInfo.Item5}\nПреподаватель: {pairInfo.Item4}\nАудитория: {pairInfo.Item2}\nТип пары: {pairInfo.Item3}";
                         schedule = schedule.Replace(Convert.ToString(pairNumber) + "_PAIR", composedPair);
                     }
                     daysCompiled.Add((DayOfWeekRussian)day.Key, schedule);
