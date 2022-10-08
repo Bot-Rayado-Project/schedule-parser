@@ -6,13 +6,14 @@ using Parser.Core.ScheduleParser;
 using Parser.Core.Models;
 using Parser;
 using Newtonsoft.Json;
+using UnidecodeSharpFork;
 
 # region Configuration
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Get required environment variables
-string connectionString = builder.Configuration["ConnectionStrings:Db"] ?? throw new Exception("DB Connection string not given.");
+string connectionString = builder.Configuration["ConnectionString"] ?? throw new Exception("DB Connection string not given.");
 string logsFileName = builder.Configuration["logsFileName"] ?? "log";
 string? emailAdress = builder.Configuration["EADRESS"];
 string? emailPassword = builder.Configuration["EPASSWORD"];
@@ -92,6 +93,7 @@ parser.OnNewData += (object _, Dictionary<string, Dictionary<int, Dictionary<Day
         foreach (var _data in data)
         {
             string _group = _data.Key.ToLower();
+            _group = _group.Unidecode();
             foreach (var parity in _data.Value)
             {
                 string _parity = parity.Key == 1 ? "нечетная" : "четная";
