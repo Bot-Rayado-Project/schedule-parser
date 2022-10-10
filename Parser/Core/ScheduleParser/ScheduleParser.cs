@@ -60,7 +60,7 @@ public class ScheduleParser : IParser<Dictionary<string, Dictionary<int, Diction
                 foreach (var day in daysInfo)
                 {
                     string parity = j == 1 ? "Нечетная" : "Четная";
-                    string schedule = "1_PAIR\n⸻⸻⸻⸻⸻\n2_PAIR\n⸻⸻⸻⸻⸻\n3_PAIR\n⸻⸻⸻⸻⸻\n4_PAIR\n⸻⸻⸻⸻⸻\n5_PAIR\n⸻⸻⸻⸻⸻";
+                    string schedule = "1_PAIR\n⸻⸻⸻⸻⸻\n2_PAIR\n⸻⸻⸻⸻⸻\n3_PAIR\n⸻⸻⸻⸻⸻\n4_PAIR\n⸻⸻⸻⸻⸻\n5_PAIR\n⸻⸻⸻⸻⸻\n";
                     foreach (var pair in day.Value)
                     {
                         string composedPair;
